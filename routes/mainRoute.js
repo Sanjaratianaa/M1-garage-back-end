@@ -3,7 +3,7 @@ const router = express.Router();
 
 // Import sub-routes
 const voitureRoutes = require('./voitureRoutes');
-const categorieRoutes = require('./CategorieRoutes');   
+const categorieRoutes = require('./categorieRoutes');   
 
 // Use sub-routes
 router.use('/articles', voitureRoutes);

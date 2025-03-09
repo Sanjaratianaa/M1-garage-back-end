@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Voiture = require('../models/Voiture');
-const Categorie = require('../models/Categorie');
+const Categorie = require('../models/caracteristiques/Categorie');
 
 // Créer un voiture
 router.post('/', async (req, res) => {
