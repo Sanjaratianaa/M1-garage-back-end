@@ -1,12 +1,78 @@
 const express = require('express');
 const router = express.Router();
+ 
+const roleRoutes = require('./utilisateur/roleRoutes');
+const personneRoutes = require('./utilisateur/personneRoutes');
+const authenticationRoutes = require('./utilisateur/utilisateurRoutes');
 
-// Import sub-routes
+const categorieRoutes = require('./caracteristiques/categorieRoutes');  
+const marqueRoutes = require('./caracteristiques/marqueRoutes');
+const modeleRoutes = require('./caracteristiques/modeleRoutes');
+const pieceRoutes = require('./caracteristiques/pieceRoutes');
+const typeTransmissionRoutes = require('./caracteristiques/typeTransmissionRoutes');
+
+const prixPieceRoutes = require('./prix/prixPieceRoutes');
+const prixSousServiceRoutes = require('./prix/prixSousServiceRoutes');
+
+const serviceRoutes = require('./services/serviceRoutes');
+const sousServiceRoutes = require('./services/sousServiceRoutes');
+
+const manuelRoutes = require('./manuelRoutes');
+const promotionRoutes = require('./promotionRoutes');
+const demandeCongeRoutes = require('./demandeCongeRoutes');
 const voitureRoutes = require('./voitureRoutes');
-const categorieRoutes = require('./CategorieRoutes');   
+const rendezVousRoutes = require('./rendezVousRoutes');
 
-// Use sub-routes
-router.use('/articles', voitureRoutes);
+
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization']; // 'Authorization: Bearer <token>'
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (token == null) {
+        return res.sendStatus(401); // Unauthorized
+    }
+
+    jwt.verify(token, secretKey, (err, user) => {
+        if (err) {
+            return res.sendStatus(403); // Forbidden (invalid token)
+        }
+
+        req.user = user;
+        next();
+    });
+};
+
+router.use('/role', roleRoutes);
+router.use('/personne', personneRoutes);
+router.use('/auth', authenticationRoutes);
+
+router.use((req, res, next) => {
+    if (req.path.startsWith('/role') || req.path.startsWith('/personne') || req.path.startsWith('/auth')) {
+        return next(); // Skip authentication for these routes.
+    }
+    authenticateToken(req, res, next);
+});
+
+
+// caracteritiques
 router.use('/categories', categorieRoutes);
+router.use('/marques', marqueRoutes);
+router.use('/modeles', modeleRoutes);
+router.use('/pieces', pieceRoutes);
+router.use('/transmissions', typeTransmissionRoutes);
+
+// prix
+router.use('/prixPieces', prixPieceRoutes);
+router.use('/ prixSousServices', prixSousServiceRoutes);
+
+// services
+router.use('/services', serviceRoutes);
+router.use('/sousServices', sousServiceRoutes);
+
+router.use('/manuels', manuelRoutes);
+router.use('/promotions', promotionRoutes);
+router.use('/conges', demandeCongeRoutes);
+router.use('/voitures', voitureRoutes);
+router.use('/rendezVous', rendezVousRoutes);
 
 module.exports = router;
