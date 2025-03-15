@@ -3,6 +3,7 @@ const router = express.Router();
  
 const roleRoutes = require('./utilisateur/roleRoutes');
 const personneRoutes = require('./utilisateur/personneRoutes');
+const authenticationRoutes = require('./utilisateur/utilisateurRoutes');
 
 const categorieRoutes = require('./caracteristiques/categorieRoutes');  
 const marqueRoutes = require('./caracteristiques/marqueRoutes');
@@ -21,6 +22,7 @@ const promotionRoutes = require('./promotionRoutes');
 const demandeCongeRoutes = require('./demandeCongeRoutes');
 const voitureRoutes = require('./voitureRoutes');
 const rendezVousRoutes = require('./rendezVousRoutes');
+
 
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization']; // 'Authorization: Bearer <token>'
@@ -42,9 +44,10 @@ const authenticateToken = (req, res, next) => {
 
 router.use('/role', roleRoutes);
 router.use('/personne', personneRoutes);
+router.use('/auth', authenticationRoutes);
 
 router.use((req, res, next) => {
-    if (req.path.startsWith('/role') || req.path.startsWith('/personne')) {
+    if (req.path.startsWith('/role') || req.path.startsWith('/personne') || req.path.startsWith('/auth')) {
         return next(); // Skip authentication for these routes.
     }
     authenticateToken(req, res, next);

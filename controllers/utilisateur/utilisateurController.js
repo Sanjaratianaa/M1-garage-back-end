@@ -1,18 +1,49 @@
 const Utilisateur = require('../../models/utilisateur/Utilisateur');
 const bcrypt = require('bcrypt');
 
-exports.createUser = async (req, res) => {
+exports.createUserWithParams = async (personne, motDePasse, idRole, dateEmbauche, etat, res) => {
     try {
-        const hashedPassword = await bcrypt.hash(req.body.motDePasse, 10);
+        const hashedPassword = await bcrypt.hash(motDePasse, 10);
 
         const utilisateur = new Utilisateur({
-            ...req.body,
+            personne: personne,
             motDePasse: hashedPassword,
+            idRole: idRole,
+            dateEmbauche: dateEmbauche,
+            etat: etat,
         });
+
         await utilisateur.save();
-        res.status(201).json(utilisateur);
+        return {success: true, message: "User created with success", data: utilisateur}
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error('Error creating user:', error);
+        return { success: false, message: "Error creating user", data: error};
+    }
+};
+
+exports.createUser = async (req, res) => {
+    try {
+        const {personne, motDePasse, idRole, dateEmbauche, etat} = req.body;
+
+        const response = await this.createUserWithParams(personne, motDePasse, idRole, dateEmbauche, etat);
+        if (response.success) {
+            res.status(201).json({
+                message: response.message,
+                data: response.data
+            });
+        } else {
+            res.status(400).json({
+                message: response.message,
+                data: response.data
+            });
+        }
+
+    } catch (error) {
+        console.error('Error creating user:', error);
+        res.status(400).json({
+            message: "Error creating user",
+            data: error
+        });
     }
 };
 
