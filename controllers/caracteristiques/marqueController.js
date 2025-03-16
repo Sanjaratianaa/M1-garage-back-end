@@ -15,8 +15,22 @@ exports.createMarque = async (req, res) => {
 exports.getAllMarques = async (req, res) => {
     try {
         const marques = await Marque.find()
-            .populate('manager')
-            .populate('managerSuppression');
+            // .populate('manager')
+            // .populate('managerSuppression')
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            })
+            .populate({
+                path: 'managerSuppression',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            });
         res.json(marques);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -60,13 +74,49 @@ exports.updateMarque = async (req, res) => {
 };
 
 // Delete a marque
+// exports.deleteMarque = async (req, res) => {
+//     try {
+//         const marque = await Marque.findByIdAndDelete(req.params.id);
+//         if (!marque) {
+//             return res.status(404).json({ message: 'Marque not found' });
+//         }
+//         res.json({ message: 'Marque deleted' });
+//     } catch (error) {
+//         res.status(500).json({ message: error.message });
+//     }
+// };
+
 exports.deleteMarque = async (req, res) => {
     try {
-        const marque = await Marque.findByIdAndDelete(req.params.id);
+        const marque = await Marque.findByIdAndUpdate(
+            req.params.id,
+            { 
+                etat: 'Non active',  // Marquer comme supprimé
+                dateSuppression: new Date(),  // Enregistrer la date
+                managerSuppression: req.body.managerSuppression  // Qui a supprimé ?
+            },
+            { new: true }
+        )
+        .populate({
+            path: 'manager',  // Peupler le manager
+            populate: {
+                path: 'personne',  // Peupler la personne
+                model: 'Personne'  // Spécifie le modèle à peupler
+            }
+        })
+        .populate({
+            path: 'managerSuppression',  // Peupler le manager
+            populate: {
+                path: 'personne',  // Peupler la personne
+                model: 'Personne'  // Spécifie le modèle à peupler
+            }
+        });
+
         if (!marque) {
             return res.status(404).json({ message: 'Marque not found' });
         }
-        res.json({ message: 'Marque deleted' });
+
+        res.json({ message: 'Marque marquée comme supprimée', marque });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

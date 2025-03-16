@@ -24,6 +24,7 @@ const MarqueSchema = new mongoose.Schema({
     },
     etat: { 
         type: String, 
+        default: "Active", 
         required: true 
     }
 }, { timestamps: true });
