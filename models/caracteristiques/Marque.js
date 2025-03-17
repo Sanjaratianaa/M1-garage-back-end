@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const MarqueSchema = new mongoose.Schema({
     libelle: { 
         type: String, 
+        unique: true,
         required: true 
     },
     dateEnregistrement: { 

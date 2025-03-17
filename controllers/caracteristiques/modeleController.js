@@ -3,11 +3,29 @@ const Modele = require('../../models/caracteristiques/Modele');
 // Create a new modele
 exports.createModele = async (req, res) => {
     try {
-        const modele = new Modele(req.body);
-        await modele.save();
+        const modeleData = {
+            ...req.body,
+            manager: "67d6f7ef67591179796c9d16",
+        };
+        const modeleSave = new Modele(modeleData);
+        await modeleSave.save();
+        const modele = await Modele.findById(modeleSave.id)
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            })
         res.status(201).json(modele);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error(error);
+        if (error.code === 11000) {
+            return res.status(400).json({
+                message: `Le modele "${req.body.libelle}" existe déjà. Veuillez choisir un autre marque.`,
+            });
+        } else
+            res.status(400).json({ message: error.message });
     }
 };
 
@@ -15,8 +33,20 @@ exports.createModele = async (req, res) => {
 exports.getAllModeles = async (req, res) => {
     try {
         const modeles = await Modele.find()
-            .populate('manager')
-            .populate('managerSuppression');
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            })
+            .populate({
+                path: 'managerSuppression',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            });
         res.json(modeles);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -27,8 +57,20 @@ exports.getAllModeles = async (req, res) => {
 exports.getModeleById = async (req, res) => {
     try {
         const modele = await Modele.findById(req.params.id)
-            .populate('manager')
-            .populate('managerSuppression');
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            })
+            .populate({
+                path: 'managerSuppression',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            });
         if (!modele) {
             return res.status(404).json({ message: 'Modele not found' });
         }
@@ -46,8 +88,20 @@ exports.updateModele = async (req, res) => {
             req.body,
             { new: true }
         )
-            .populate('manager')
-            .populate('managerSuppression');
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            })
+            .populate({
+                path: 'managerSuppression',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            });
 
         if (!modele) {
             return res.status(404).json({ message: 'Modele not found' });
@@ -55,19 +109,50 @@ exports.updateModele = async (req, res) => {
 
         res.json(modele);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error(error);
+        if (error.code === 11000) {
+            return res.status(400).json({
+                message: `Le modele "${req.body.libelle}" existe déjà. Veuillez choisir un autre marque.`,
+            });
+        } else
+            res.status(400).json({ message: error.message });
     }
 };
 
 // Delete a modele
 exports.deleteModele = async (req, res) => {
     try {
-        const modele = await Modele.findByIdAndDelete(req.params.id);
+        const modele = await Modele.findByIdAndUpdate(
+            req.params.id,
+            {
+                etat: 'Inactive',  // Modeler comme supprimé
+                dateSuppression: new Date(),  // Enregistrer la date
+                managerSuppression: "67d6f7ef67591179796c9d16"  // Qui a supprimé ?
+            },
+            { new: true }
+        )
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            })
+            .populate({
+                path: 'managerSuppression',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            });
+
         if (!modele) {
             return res.status(404).json({ message: 'Modele not found' });
         }
-        res.json({ message: 'Modele deleted' });
+
+        res.json(modele);
     } catch (error) {
+        console.error(error);
         res.status(500).json({ message: error.message });
     }
 };
