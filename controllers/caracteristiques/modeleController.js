@@ -5,7 +5,7 @@ exports.createModele = async (req, res) => {
     try {
         const modeleData = {
             ...req.body,
-            manager: "67d6f7ef67591179796c9d16",
+            manager: "67d7ce46ebc404449c7180b0",
         };
         const modeleSave = new Modele(modeleData);
         await modeleSave.save();
@@ -127,7 +127,7 @@ exports.deleteModele = async (req, res) => {
             {
                 etat: 'Inactive',  // Modeler comme supprimé
                 dateSuppression: new Date(),  // Enregistrer la date
-                managerSuppression: "67d6f7ef67591179796c9d16"  // Qui a supprimé ?
+                managerSuppression: "67d7ce46ebc404449c7180b0"  // Qui a supprimé ?
             },
             { new: true }
         )

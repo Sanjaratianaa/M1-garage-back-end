@@ -5,7 +5,7 @@ exports.createMarque = async (req, res) => {
     try {
         const marqueData = {
             ...req.body,
-            manager: "67d6f7ef67591179796c9d16",
+            manager: "67d7ce46ebc404449c7180b0",
         };
         const marqueSave = new Marque(marqueData);
         await marqueSave.save();
@@ -126,7 +126,7 @@ exports.deleteMarque = async (req, res) => {
             {
                 etat: 'Inactive',  // Marquer comme supprimé
                 dateSuppression: new Date(),  // Enregistrer la date
-                managerSuppression: "67d6f7ef67591179796c9d16"  // Qui a supprimé ?
+                managerSuppression: "67d7ce46ebc404449c7180b0"  // Qui a supprimé ?
             },
             { new: true }
         )

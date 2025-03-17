@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const CategorieSchema = new mongoose.Schema({
     libelle: { 
         type: String, 
+        unique: true,
         required: true 
     },
     dateEnregistrement: { 
@@ -24,6 +25,7 @@ const CategorieSchema = new mongoose.Schema({
     },
     etat: { 
         type: String, 
+        default: "Active", 
         required: true 
     }
 }, { timestamps: true });

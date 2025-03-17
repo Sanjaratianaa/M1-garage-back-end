@@ -3,11 +3,30 @@ const Categorie = require('../../models/caracteristiques/Categorie');
 // Create a new category
 exports.createCategorie = async (req, res) => {
     try {
-        const categorie = new Categorie(req.body);
-        await categorie.save();
+        const categorieData = {
+            ...req.body,
+            manager: "67d7ce46ebc404449c7180b0",
+        };
+        const categorieSave = new Categorie(categorieData);
+        await categorieSave.save();
+        const categorie = await Categorie.findById(categorieSave.id)
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            })
         res.status(201).json(categorie);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error(error);
+        if (error.code === 11000) {
+            console.log("tafiditaaa");
+            return res.status(400).json({
+                message: `Le categorie "${req.body.libelle}" existe déjà. Veuillez choisir un autre categorie.`,
+            });
+        } else
+            res.status(400).json({ message: error.message });
     }
 };
 
@@ -15,8 +34,20 @@ exports.createCategorie = async (req, res) => {
 exports.getAllCategories = async (req, res) => {
     try {
         const categories = await Categorie.find()
-                                            .populate('manager')
-                                            .populate('managerSuppression');
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            })
+            .populate({
+                path: 'managerSuppression',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            });
         res.json(categories);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -27,8 +58,20 @@ exports.getAllCategories = async (req, res) => {
 exports.getCategorieById = async (req, res) => {
     try {
         const categorie = await Categorie.findById(req.params.id)
-                                                .populate('manager')
-                                                .populate('managerSuppression');
+        .populate({
+            path: 'manager',  // Peupler le manager
+            populate: {
+                path: 'personne',  // Peupler la personne
+                model: 'Personne'  // Spécifie le modèle à peupler
+            }
+        })
+        .populate({
+            path: 'managerSuppression',  // Peupler le manager
+            populate: {
+                path: 'personne',  // Peupler la personne
+                model: 'Personne'  // Spécifie le modèle à peupler
+            }
+        });
         if (!categorie) {
             return res.status(404).json({ message: 'Categorie not found' });
         }
@@ -46,8 +89,20 @@ exports.updateCategorie = async (req, res) => {
             req.body,
             { new: true }
         )
-        .populate('manager')
-        .populate('managerSuppression');
+        .populate({
+            path: 'manager',  // Peupler le manager
+            populate: {
+                path: 'personne',  // Peupler la personne
+                model: 'Personne'  // Spécifie le modèle à peupler
+            }
+        })
+        .populate({
+            path: 'managerSuppression',  // Peupler le manager
+            populate: {
+                path: 'personne',  // Peupler la personne
+                model: 'Personne'  // Spécifie le modèle à peupler
+            }
+        });
 
         if (!categorie) {
             return res.status(404).json({ message: 'Categorie not found' });
@@ -55,19 +110,51 @@ exports.updateCategorie = async (req, res) => {
 
         res.json(categorie);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error(error);
+        if (error.code === 11000) {
+            console.log("tafiditaaa");
+            return res.status(400).json({
+                message: `Le categorie "${req.body.libelle}" existe déjà. Veuillez choisir un autre categorie.`,
+            });
+        } else
+            res.status(400).json({ message: error.message });
     }
 };
 
 // Delete a category
 exports.deleteCategorie = async (req, res) => {
     try {
-        const categorie = await Categorie.findByIdAndDelete(req.params.id);
+        const categorie = await Categorie.findByIdAndUpdate(
+            req.params.id,
+            {
+                etat: 'Inactive',  // Categorier comme supprimé
+                dateSuppression: new Date(),  // Enregistrer la date
+                managerSuppression: "67d7ce46ebc404449c7180b0"  // Qui a supprimé ?
+            },
+            { new: true }
+        )
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            })
+            .populate({
+                path: 'managerSuppression',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            });
+
         if (!categorie) {
             return res.status(404).json({ message: 'Categorie not found' });
         }
-        res.json({ message: 'Categorie deleted' });
+
+        res.json(categorie);
     } catch (error) {
+        console.error(error);
         res.status(500).json({ message: error.message });
     }
 };
