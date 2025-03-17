@@ -1,34 +1,77 @@
 const Service = require('../../models/services/Service');
 
-// Create a new Service
+// Create a new service
 exports.createService = async (req, res) => {
     try {
-        const service = new Service(req.body);
-        await service.save();
+        const serviceData = {
+            ...req.body,
+            manager: "67d7ce46ebc404449c7180b0",
+        };
+        const serviceSave = new Service(serviceData);
+        await serviceSave.save();
+        const service = await Service.findById(serviceSave.id)
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            })
         res.status(201).json(service);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error(error);
+        if (error.code === 11000) {
+            console.log("tafiditaaa");
+            return res.status(400).json({
+                message: `Le service "${req.body.libelle}" existe déjà. Veuillez choisir un autre service.`,
+            });
+        } else
+            res.status(400).json({ message: error.message });
     }
 };
 
-// Get all Services
+// Get all services
 exports.getAllServices = async (req, res) => {
     try {
         const services = await Service.find()
-            .populate('manager')
-            .populate('managerSuppression');
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            })
+            .populate({
+                path: 'managerSuppression',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            });
         res.json(services);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// Get a Service by ID
+// Get a service by ID
 exports.getServiceById = async (req, res) => {
     try {
         const service = await Service.findById(req.params.id)
-            .populate('manager')
-            .populate('managerSuppression');
+        .populate({
+            path: 'manager',  // Peupler le manager
+            populate: {
+                path: 'personne',  // Peupler la personne
+                model: 'Personne'  // Spécifie le modèle à peupler
+            }
+        })
+        .populate({
+            path: 'managerSuppression',  // Peupler le manager
+            populate: {
+                path: 'personne',  // Peupler la personne
+                model: 'Personne'  // Spécifie le modèle à peupler
+            }
+        });
         if (!service) {
             return res.status(404).json({ message: 'Service not found' });
         }
@@ -38,7 +81,7 @@ exports.getServiceById = async (req, res) => {
     }
 };
 
-// Update a Service
+// Update a service
 exports.updateService = async (req, res) => {
     try {
         const service = await Service.findByIdAndUpdate(
@@ -46,8 +89,20 @@ exports.updateService = async (req, res) => {
             req.body,
             { new: true }
         )
-        .populate('manager')
-        .populate('managerSuppression');
+        .populate({
+            path: 'manager',  // Peupler le manager
+            populate: {
+                path: 'personne',  // Peupler la personne
+                model: 'Personne'  // Spécifie le modèle à peupler
+            }
+        })
+        .populate({
+            path: 'managerSuppression',  // Peupler le manager
+            populate: {
+                path: 'personne',  // Peupler la personne
+                model: 'Personne'  // Spécifie le modèle à peupler
+            }
+        });
 
         if (!service) {
             return res.status(404).json({ message: 'Service not found' });
@@ -55,19 +110,51 @@ exports.updateService = async (req, res) => {
 
         res.json(service);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error(error);
+        if (error.code === 11000) {
+            console.log("tafiditaaa");
+            return res.status(400).json({
+                message: `Le service "${req.body.libelle}" existe déjà. Veuillez choisir un autre service.`,
+            });
+        } else
+            res.status(400).json({ message: error.message });
     }
 };
 
-// Delete a Service
+// Delete a service
 exports.deleteService = async (req, res) => {
     try {
-        const service = await Service.findByIdAndDelete(req.params.id);
+        const service = await Service.findByIdAndUpdate(
+            req.params.id,
+            {
+                etat: 'Inactive',  // Servicer comme supprimé
+                dateSuppression: new Date(),  // Enregistrer la date
+                managerSuppression: "67d7ce46ebc404449c7180b0"  // Qui a supprimé ?
+            },
+            { new: true }
+        )
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            })
+            .populate({
+                path: 'managerSuppression',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            });
+
         if (!service) {
             return res.status(404).json({ message: 'Service not found' });
         }
-        res.json({ message: 'Service deleted' });
+
+        res.json(service);
     } catch (error) {
+        console.error(error);
         res.status(500).json({ message: error.message });
     }
 };

@@ -1,39 +1,41 @@
 const mongoose = require('mongoose');
 
 const SousServiceSchema = new mongoose.Schema({
-    service: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Service', 
-        required: true 
+    service: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Service',
+        required: true
     },
-    libelle: { 
-        type: String, 
-        required: true 
+    libelle: {
+        type: String,
+        required: true
     },
-    duree: { 
-        type: Number, 
-        required: true 
-    }, 
-    dateEnregistrement: { 
-        type: Date, 
-        default: Date.now, 
-        required: true 
+    duree: {
+        type: Number,
+        required: true
     },
-    manager: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Utilisateur', 
-        required: true 
+    dateEnregistrement: {
+        type: Date,
+        default: Date.now,
+        required: true
     },
-    dateSuppression: { 
-        type: Date 
+    manager: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Utilisateur',
+        required: true
     },
-    managerSuppression: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Utilisateur' 
+    dateSuppression: {
+        type: Date
     },
-    etat: { 
-        type: String, 
-        required: true }
+    managerSuppression: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Utilisateur'
+    },
+    etat: {
+        type: String,
+        default: "Active",
+        required: true
+    }
 }, { timestamps: true });
 
 module.exports = mongoose.model('SousService', SousServiceSchema);
