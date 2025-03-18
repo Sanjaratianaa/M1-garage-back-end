@@ -4,6 +4,8 @@ const router = express.Router();
 const roleRoutes = require('./utilisateur/roleRoutes');
 const personneRoutes = require('./utilisateur/personneRoutes');
 const utilisateurRoutes = require('./utilisateur/utilisateurRoutes');
+const authenticationRoutes = require('./utilisateur/utilisateurRoutes');
+
 
 const categorieRoutes = require('./caracteristiques/categorieRoutes');  
 const marqueRoutes = require('./caracteristiques/marqueRoutes');
@@ -23,10 +25,38 @@ const demandeCongeRoutes = require('./demandeCongeRoutes');
 const voitureRoutes = require('./voitureRoutes');
 const rendezVousRoutes = require('./rendezVousRoutes');
 
-// authentification
+
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization']; // 'Authorization: Bearer <token>'
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (token == null) {
+        return res.sendStatus(401); // Unauthorized
+    }
+
+    jwt.verify(token, secretKey, (err, user) => {
+        if (err) {
+            return res.sendStatus(403); // Forbidden (invalid token)
+        }
+
+        req.user = user;
+        next();
+    });
+};
+
 router.use('/role', roleRoutes);
 router.use('/personne', personneRoutes);
+
 router.use('/utilisateur', utilisateurRoutes);
+
+router.use('/auth', authenticationRoutes);
+
+router.use((req, res, next) => {
+    if (req.path.startsWith('/role') || req.path.startsWith('/personne') || req.path.startsWith('/auth')) {
+        return next(); // Skip authentication for these routes.
+    }
+    authenticateToken(req, res, next);
+});
 
 // caracteritiques
 router.use('/categories', categorieRoutes);
