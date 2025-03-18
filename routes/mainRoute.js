@@ -3,7 +3,9 @@ const router = express.Router();
  
 const roleRoutes = require('./utilisateur/roleRoutes');
 const personneRoutes = require('./utilisateur/personneRoutes');
+const utilisateurRoutes = require('./utilisateur/utilisateurRoutes');
 const authenticationRoutes = require('./utilisateur/utilisateurRoutes');
+
 
 const categorieRoutes = require('./caracteristiques/categorieRoutes');  
 const marqueRoutes = require('./caracteristiques/marqueRoutes');
@@ -44,6 +46,9 @@ const authenticateToken = (req, res, next) => {
 
 router.use('/role', roleRoutes);
 router.use('/personne', personneRoutes);
+
+router.use('/utilisateur', utilisateurRoutes);
+
 router.use('/auth', authenticationRoutes);
 
 router.use((req, res, next) => {
@@ -52,7 +57,6 @@ router.use((req, res, next) => {
     }
     authenticateToken(req, res, next);
 });
-
 
 // caracteritiques
 router.use('/categories', categorieRoutes);
