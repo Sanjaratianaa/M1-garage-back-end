@@ -8,6 +8,7 @@ const SousServiceSchema = new mongoose.Schema({
     },
     libelle: {
         type: String,
+        unique: true,
         required: true
     },
     duree: {
