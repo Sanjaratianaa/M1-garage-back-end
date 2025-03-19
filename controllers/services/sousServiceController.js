@@ -5,7 +5,7 @@ exports.createSousService = async (req, res) => {
     try {
         const sousServiceData = {
             ...req.body,
-            manager: "67d6f7ef67591179796c9d16",
+            manager: "67d7ce46ebc404449c7180b0",
         };
         const sousServiceSave = new SousService(sousServiceData);
         await sousServiceSave.save();
@@ -35,8 +35,20 @@ exports.getAllSousServices = async (req, res) => {
     try {
         const sousServices = await SousService.find()
             .populate('service')
-            .populate('manager')
-            .populate('managerSuppression');
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            })
+            .populate({
+                path: 'managerSuppression',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            });
         res.json(sousServices);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -48,8 +60,20 @@ exports.getSousServiceById = async (req, res) => {
     try {
         const sousService = await SousService.findById(req.params.id)
             .populate('service')
-            .populate('manager')
-            .populate('managerSuppression');
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            })
+            .populate({
+                path: 'managerSuppression',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            });
         if (!sousService) {
             return res.status(404).json({ message: 'SousService not found' });
         }
@@ -90,24 +114,12 @@ exports.updateSousService = async (req, res) => {
 // Delete a SousService
 exports.deleteSousService = async (req, res) => {
     try {
-        const sousService = await SousService.findByIdAndDelete(req.params.id);
-        if (!sousService) {
-            return res.status(404).json({ message: 'SousService not found' });
-        }
-        res.json({ message: 'SousService deleted' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-exports.deleteService = async (req, res) => {
-    try {
         const service = await SousService.findByIdAndUpdate(
             req.params.id,
             {
                 etat: 'Inactive',  // Servicer comme supprimé
                 dateSuppression: new Date(),  // Enregistrer la date
-                managerSuppression: "67d6f7ef67591179796c9d16"  // Qui a supprimé ?
+                managerSuppression: "67d7ce46ebc404449c7180b0"  // Qui a supprimé ?
             },
             { new: true }
         )
