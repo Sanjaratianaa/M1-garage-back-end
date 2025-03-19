@@ -4,7 +4,7 @@ const router = express.Router();
 const roleRoutes = require('./utilisateur/roleRoutes');
 const personneRoutes = require('./utilisateur/personneRoutes');
 const utilisateurRoutes = require('./utilisateur/utilisateurRoutes');
-const authenticationRoutes = require('./utilisateur/utilisateurRoutes');
+const authenticationRoutes = require('./utilisateur/authentificationRoutes');
 
 
 const categorieRoutes = require('./caracteristiques/categorieRoutes');  
@@ -53,7 +53,7 @@ router.use('/auth', authenticationRoutes);
 
 router.use((req, res, next) => {
     if (req.path.startsWith('/role') || req.path.startsWith('/personne') || req.path.startsWith('/auth')) {
-        return next(); // Skip authentication for these routes.
+        return next();
     }
     authenticateToken(req, res, next);
 });

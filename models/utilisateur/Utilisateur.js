@@ -11,7 +11,6 @@ const UtilisateurSchema = new mongoose.Schema({
         required: true 
     },
     matricule: { 
-        type: String,
         type: String
     },
     dateInscription: { 
@@ -37,11 +36,14 @@ UtilisateurSchema.index({ matricule: 1 }, { unique: true, sparse: true });
 
 async function getNextSequenceValue(role) {
     const counter = await mongoose.connection.db.collection('counters').findOneAndUpdate(
-        {_id: `matricule_${role}`},
-        {$inc: {seq: 1}},
-        {upsert: true, returnDocument: 'after'}
+        { _id: `matricule_${role}` },
+        { $inc: { seq: 1 } },
+        { upsert: true, returnDocument: 'after' } // Ensures the updated document is returned
     );
-    return counter.value ? counter.value.seq : 1;
+
+    console.log('Counter result:', counter);
+
+    return counter?.seq ?? 1; // Ensure to get the correct sequence value
 }
 
 UtilisateurSchema.pre('save', async function (next) {

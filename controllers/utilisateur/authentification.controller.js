@@ -2,9 +2,9 @@ const AuthenticationService = require('../../services/authentification.service')
 
 const AuthenticationController = {
     login: async (req, res) => {
-        const {username, password} = req.body;
+        const {email, password} = req.body;
 
-        const result = await AuthenticationService.authenticateUser(username, password);
+        const result = await AuthenticationService.authenticateUser(email, password);
 
         if (result.success) {
             res.json({token: result.token, user: result.user});
