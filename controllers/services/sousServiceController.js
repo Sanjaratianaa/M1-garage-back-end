@@ -5,7 +5,7 @@ exports.createSousService = async (req, res) => {
     try {
         const sousServiceData = {
             ...req.body,
-            manager: "67d7ce46ebc404449c7180b0",
+            manager: "67d6f7ef67591179796c9d16",
         };
         const sousServiceSave = new SousService(sousServiceData);
         await sousServiceSave.save();
@@ -44,6 +44,24 @@ exports.getAllSousServices = async (req, res) => {
             })
             .populate({
                 path: 'managerSuppression',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            });
+        res.json(sousServices);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Get all SousServices Actives
+exports.getAllSousServicesActives = async (req, res) => {
+    try {
+        const sousServices = await SousService.find({ etat: "Active" })
+            .populate('service')
+            .populate({
+                path: 'manager',  // Peupler le manager
                 populate: {
                     path: 'personne',  // Peupler la personne
                     model: 'Personne'  // Spécifie le modèle à peupler
@@ -119,7 +137,7 @@ exports.deleteSousService = async (req, res) => {
             {
                 etat: 'Inactive',  // Servicer comme supprimé
                 dateSuppression: new Date(),  // Enregistrer la date
-                managerSuppression: "67d7ce46ebc404449c7180b0"  // Qui a supprimé ?
+                managerSuppression: "67d6f7ef67591179796c9d16"  // Qui a supprimé ?
             },
             { new: true }
         )

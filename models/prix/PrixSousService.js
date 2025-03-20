@@ -13,12 +13,17 @@ const PrixSousServiceSchema = new mongoose.Schema({
     },
     date: { 
         type: Date, 
-        default: Date.now, 
         required: true },
     prixUnitaire: { 
         type: Number, 
+        default: 0,
         required: true 
-    }
+    },
+    dateEnregistrement: { 
+        type: Date, 
+        default: Date.now, 
+        required: true 
+    },
 }, { timestamps: true });
 
 module.exports = mongoose.model('PrixSousService', PrixSousServiceSchema);

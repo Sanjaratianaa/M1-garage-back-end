@@ -3,10 +3,30 @@ const PrixSousService = require('../../models/prix/PrixSousService');
 // Create a new PrixSousService
 exports.createPrixSousService = async (req, res) => {
     try {
-        const prixSousService = new PrixSousService(req.body);
-        await prixSousService.save();
+        const prixSousServiceData = {
+            ...req.body,
+            manager: "67d6f7ef67591179796c9d16",
+        };
+        const prixSousServiceSave = new PrixSousService(prixSousServiceData);
+        await prixSousServiceSave.save();
+        const prixSousService = await PrixSousService.findById(prixSousServiceSave.id)
+            .populate({
+                path: 'sousService',  // Peupler le sousService
+                populate: {
+                    path: 'service',  // Peupler le service
+                    model: 'Service'  // Spécifie le modèle à peupler
+                }
+            })
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            })
         res.status(201).json(prixSousService);
     } catch (error) {
+        console.error(error);
         res.status(400).json({ message: error.message });
     }
 };
@@ -15,8 +35,20 @@ exports.createPrixSousService = async (req, res) => {
 exports.getAllPrixSousServices = async (req, res) => {
     try {
         const prixSousServices = await PrixSousService.find()
-            .populate('sousService')  // Populate the 'sousService' reference
-            .populate('manager'); // Populate the 'manager' reference
+            .populate({
+                path: 'sousService',  // Peupler le sousService
+                populate: {
+                    path: 'service',  // Peupler le service
+                    model: 'Service'  // Spécifie le modèle à peupler
+                }
+            })
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            })
         res.json(prixSousServices);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -27,8 +59,20 @@ exports.getAllPrixSousServices = async (req, res) => {
 exports.getPrixSousServiceById = async (req, res) => {
     try {
         const prixSousService = await PrixSousService.findById(req.params.id)
-            .populate('sousService')
-            .populate('manager');
+            .populate({
+                path: 'sousService',  // Peupler le sousService
+                populate: {
+                    path: 'service',  // Peupler le service
+                    model: 'Service'  // Spécifie le modèle à peupler
+                }
+            })
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            })
         if (!prixSousService) {
             return res.status(404).json({ message: 'PrixSousService not found' });
         }
@@ -46,8 +90,20 @@ exports.updatePrixSousService = async (req, res) => {
             req.body,
             { new: true }
         )
-        .populate('sousService')
-        .populate('manager');
+            .populate({
+                path: 'sousService',  // Peupler le sousService
+                populate: {
+                    path: 'service',  // Peupler le service
+                    model: 'Service'  // Spécifie le modèle à peupler
+                }
+            })
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            })
 
         if (!prixSousService) {
             return res.status(404).json({ message: 'PrixSousService not found' });

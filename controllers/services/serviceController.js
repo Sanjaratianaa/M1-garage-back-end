@@ -5,7 +5,7 @@ exports.createService = async (req, res) => {
     try {
         const serviceData = {
             ...req.body,
-            manager: "67d7ce46ebc404449c7180b0",
+            manager: "67d6f7ef67591179796c9d16",
         };
         const serviceSave = new Service(serviceData);
         await serviceSave.save();
@@ -129,7 +129,7 @@ exports.deleteService = async (req, res) => {
             {
                 etat: 'Inactive',  // Servicer comme supprimé
                 dateSuppression: new Date(),  // Enregistrer la date
-                managerSuppression: "67d7ce46ebc404449c7180b0"  // Qui a supprimé ?
+                managerSuppression: "67d6f7ef67591179796c9d16"  // Qui a supprimé ?
             },
             { new: true }
         )
