@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
  
 const roleRoutes = require('./utilisateur/roleRoutes');
-const personneRoutes = require('./utilisateur/personneRoutes');
+const personneRoutes = require('./utilisateur/personneRoutes'); 
 const utilisateurRoutes = require('./utilisateur/utilisateurRoutes');
 const authenticationRoutes = require('./utilisateur/authentificationRoutes');
 
@@ -27,16 +27,16 @@ const rendezVousRoutes = require('./rendezVousRoutes');
 
 
 const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization']; // 'Authorization: Bearer <token>'
+    const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
     if (token == null) {
-        return res.sendStatus(401); // Unauthorized
+        return res.sendStatus(401);
     }
 
     jwt.verify(token, secretKey, (err, user) => {
         if (err) {
-            return res.sendStatus(403); // Forbidden (invalid token)
+            return res.sendStatus(403);
         }
 
         req.user = user;

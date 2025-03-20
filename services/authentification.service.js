@@ -10,7 +10,7 @@ const secretKey = 'M1-project-MEAN';
 const AuthenticationService = {
     authenticateUser: async (email, password) => {
         try {
-            const personne = await Personne.findOne({ email });
+            const personne = await Personne.findOne({ email: email });
 
             if (!personne) {
                 return { success: false, message: 'Invalid credentials' };
@@ -40,7 +40,7 @@ const AuthenticationService = {
 
             const token = jwt.sign(payload, secretKey, { expiresIn: '1h' });
 
-            return { success: true, token: token, user: payload };
+            return { success: true, token: token };
         } catch (error) {
             console.error('Authentication error:', error);
             return { success: false, message: 'Authentication failed' };
@@ -139,6 +139,37 @@ const AuthenticationService = {
             }
 
             return { success: false, message: "Error registering user", data: error };
+        }
+    },
+
+    changePassword: async (email, oldPassword, newPassword, confirmPassword) => {
+        try {
+            const user = await Utilisateur.findOne({ 'personne.email': email }).populate('personne').populate('idRole');
+
+            if (!user) {
+                return { success: false, message: 'Invalid credentials' };
+            }
+
+            const passwordMatch = await bcrypt.compare(oldPassword, user.motDePasse);
+
+            if (!passwordMatch) {
+                return { success: false, message: 'Invalid credentials: Incorrect old password' };
+            }
+
+            if (newPassword !== confirmPassword) {
+                return { success: false, message: 'New password and confirm password do not match' };
+            }
+    
+            // 4. Hash the new password
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+            user.motDePasse = hashedPassword;
+            await user.save();
+
+            return { success: true, message: "Le mot de passe is successfully changed", data: user };
+        } catch (error) {
+            console.error('Authentication error:', error);
+            return { success: false, message: 'Authentication failed' };
         }
     }
 };
