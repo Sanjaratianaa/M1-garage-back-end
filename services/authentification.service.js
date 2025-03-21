@@ -49,6 +49,7 @@ const AuthenticationService = {
 
     verifyToken: (token) => {
         try {
+            console.log("yesssssssssss");
             const decoded = jwt.verify(token, secretKey);
             return { success: true, user: decoded };
         } catch (error) {

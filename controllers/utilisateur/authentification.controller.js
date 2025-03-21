@@ -28,11 +28,12 @@ const AuthenticationController = {
         const token = req.body.token;
 
         const result = AuthenticationService.verifyToken(token);
+        console.log(result);
 
         if (result.success) {
-            res.status(201).json({message: result.message, data: result.data});
+            res.status(201).json({success: true, user: result.user});
         } else {
-            res.status(500).json({message: result.message, data: result.data});
+            res.status(500).json({success: false, message: result.message});
         }
     },
 };
