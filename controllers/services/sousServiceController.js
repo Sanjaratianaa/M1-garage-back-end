@@ -1,4 +1,5 @@
 const SousService = require('../../models/services/SousService');
+const PrixSousService = require('../../models/prix/PrixSousService');
 
 // Create a new SousService
 exports.createSousService = async (req, res) => {
@@ -18,6 +19,9 @@ exports.createSousService = async (req, res) => {
                     model: 'Personne'  // Spécifie le modèle à peupler
                 }
             })
+            .lean(); 
+        sousService.prixUnitaire = 0;
+        
         res.status(201).json(sousService);
     } catch (error) {
         console.error(error);
@@ -31,29 +35,73 @@ exports.createSousService = async (req, res) => {
 };
 
 // Get all SousServices
+// exports.getAllSousServices = async (req, res) => {
+//     try {
+//         const sousServices = await SousService.find()
+//             .populate('service')
+//             .populate({
+//                 path: 'manager',  // Peupler le manager
+//                 populate: {
+//                     path: 'personne',  // Peupler la personne
+//                     model: 'Personne'  // Spécifie le modèle à peupler
+//                 }
+//             })
+//             .populate({
+//                 path: 'managerSuppression',  // Peupler le manager
+//                 populate: {
+//                     path: 'personne',  // Peupler la personne
+//                     model: 'Personne'  // Spécifie le modèle à peupler
+//                 }
+//             });
+//         res.json(sousServices);
+//     } catch (error) {
+//         res.status(500).json({ message: error.message });
+//     }
+// };
+
 exports.getAllSousServices = async (req, res) => {
     try {
+        const today = new Date(); // Date du jour
+
+        // Récupérer tous les sous-services
         const sousServices = await SousService.find()
             .populate('service')
             .populate({
-                path: 'manager',  // Peupler le manager
+                path: 'manager',
                 populate: {
-                    path: 'personne',  // Peupler la personne
-                    model: 'Personne'  // Spécifie le modèle à peupler
+                    path: 'personne',
+                    model: 'Personne'
                 }
             })
             .populate({
-                path: 'managerSuppression',  // Peupler le manager
+                path: 'managerSuppression',
                 populate: {
-                    path: 'personne',  // Peupler la personne
-                    model: 'Personne'  // Spécifie le modèle à peupler
+                    path: 'personne',
+                    model: 'Personne'
                 }
-            });
+            })
+            .lean(); // Convertit en objets JS purs pour modification
+
+        // Récupérer le prix le plus récent pour chaque sous-service
+        for (let sousService of sousServices) {
+            const prix = await PrixSousService.findOne({
+                sousService: sousService._id,
+                date: { $lte: today } // Date d'application inférieure ou égale à aujourd'hui
+            })
+            .sort({ date: -1, dateEnregistrement: -1 }) // Trier par date DESC puis dateEnregistrement DESC
+            .limit(1)
+            .lean();
+
+            sousService.prixUnitaire = prix ? prix.prixUnitaire : 0; // Ajouter le prix s'il existe
+        }
+
         res.json(sousServices);
     } catch (error) {
+        console.log(error);
         res.status(500).json({ message: error.message });
     }
 };
+
 
 // Get all SousServices Actives
 exports.getAllSousServicesActives = async (req, res) => {
@@ -104,6 +152,8 @@ exports.getSousServiceById = async (req, res) => {
 // Update a SousService
 exports.updateSousService = async (req, res) => {
     try {
+        const today = new Date(); // Date du jour
+
         const sousService = await SousService.findByIdAndUpdate(
             req.params.id,
             req.body,
@@ -111,7 +161,17 @@ exports.updateSousService = async (req, res) => {
         )
         .populate('service')
         .populate('manager')
-        .populate('managerSuppression');
+        .populate('managerSuppression')
+        .lean();
+
+        const prix = await PrixSousService.findOne({
+            sousService: sousService._id,
+            date: { $lte: today } // Date d'application inférieure ou égale à aujourd'hui
+        })
+        .sort({ date: -1, dateEnregistrement: -1 }) // Trier par date DESC puis dateEnregistrement DESC
+        .lean();
+
+        sousService.prixUnitaire = prix ? prix.prixUnitaire : 0; // Ajouter le prix s'il existe
 
         if (!sousService) {
             return res.status(404).json({ message: 'SousService not found' });

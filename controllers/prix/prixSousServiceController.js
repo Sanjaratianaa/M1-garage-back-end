@@ -7,6 +7,19 @@ exports.createPrixSousService = async (req, res) => {
             ...req.body,
             manager: "67d6f7ef67591179796c9d16",
         };
+
+        if (prixSousServiceData.prixUnitaire < 0)
+            throw new Error(`Prix invalide. Le prix doit etre superieur à zero.`);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const dateToCheck = new Date(prixSousServiceData.date); // Conversion en Date
+
+        console.log(dateToCheck + " < ? " + today);
+
+        if (dateToCheck < today) 
+            throw new Error(`Date applicatif invalide. La date doit être supérieure ou égale à la date du jour.`);
+
         const prixSousServiceSave = new PrixSousService(prixSousServiceData);
         await prixSousServiceSave.save();
         const prixSousService = await PrixSousService.findById(prixSousServiceSave.id)
@@ -85,6 +98,17 @@ exports.getPrixSousServiceById = async (req, res) => {
 // Update a PrixSousService
 exports.updatePrixSousService = async (req, res) => {
     try {
+        if (req.body.prixUnitaire < 0)
+            throw new Error(`Prix invalide. Le prix doit etre superieur à zero.`);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const dateToCheck = new Date(req.body.date); // Conversion en Date
+
+        console.log(dateToCheck + " < ? " + today);
+
+        if (dateToCheck < today) 
+            throw new Error(`Date applicatif invalide. La date doit être supérieure ou égale à la date du jour.`);
         const prixSousService = await PrixSousService.findByIdAndUpdate(
             req.params.id,
             req.body,
