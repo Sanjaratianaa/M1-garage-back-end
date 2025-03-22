@@ -54,6 +54,23 @@ exports.getAllPieces = async (req, res) => {
     }
 };
 
+// Get all pieces actives
+exports.getAllPiecesActives = async (req, res) => {
+    try {
+        const pieces = await Piece.find({etat: "Active"})
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            });
+        res.json(pieces);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // Get a piece by ID
 exports.getPieceById = async (req, res) => {
     try {
@@ -154,23 +171,6 @@ exports.deletePiece = async (req, res) => {
         res.json(piece);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: error.message });
-    }
-};
-
-// Get all pieces actives
-exports.getAllPiecesActives = async (req, res) => {
-    try {
-        const pieces = await Piece.find()
-            .populate({
-                path: 'manager',  // Peupler le manager
-                populate: {
-                    path: 'personne',  // Peupler la personne
-                    model: 'Personne'  // Spécifie le modèle à peupler
-                }
-            });
-        res.json(pieces);
-    } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };

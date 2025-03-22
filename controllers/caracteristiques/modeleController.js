@@ -53,6 +53,23 @@ exports.getAllModeles = async (req, res) => {
     }
 };
 
+// Get all modeles actives
+exports.getAllModelesActives = async (req, res) => {
+    try {
+        const modeles = await Modele.find({etat: "Active"})
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            });
+        res.json(modeles);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // Get a modele by ID
 exports.getModeleById = async (req, res) => {
     try {

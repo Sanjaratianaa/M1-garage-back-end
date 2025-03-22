@@ -55,6 +55,23 @@ exports.getAllTypeTransmissions = async (req, res) => {
     }
 };
 
+// Get all typeTransmissions actives
+exports.getAllTypeTransmissionsActives = async (req, res) => {
+    try {
+        const typeTransmissions = await TypeTransmission.find({etat: "Active"})
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            });
+        res.json(typeTransmissions);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // Get a typeTransmission by ID
 exports.getTypeTransmissionById = async (req, res) => {
     try {

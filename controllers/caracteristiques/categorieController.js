@@ -54,6 +54,23 @@ exports.getAllCategories = async (req, res) => {
     }
 };
 
+// Get all categories  actives
+exports.getAllCategoriesActives = async (req, res) => {
+    try {
+        const categories = await Categorie.find({etat: "Active"})
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            });
+        res.json(categories);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // Get a category by ID
 exports.getCategorieById = async (req, res) => {
     try {

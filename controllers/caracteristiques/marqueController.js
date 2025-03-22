@@ -54,6 +54,23 @@ exports.getAllMarques = async (req, res) => {
     }
 };
 
+// Get all marques actives
+exports.getAllMarquesActives = async (req, res) => {
+    try {
+        const marques = await Marque.find({etat: "Active"})
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            });
+        res.json(marques);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // Get a marque by ID
 exports.getMarqueById = async (req, res) => {
     try {
