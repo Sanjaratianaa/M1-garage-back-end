@@ -25,6 +25,9 @@ const demandeCongeRoutes = require('./demandeCongeRoutes');
 const voitureRoutes = require('./voitureRoutes');
 const rendezVousRoutes = require('./rendezVousRoutes');
 
+const secretKey = 'M1-project-MEAN';
+const jwt = require('jsonwebtoken');
+
 
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];

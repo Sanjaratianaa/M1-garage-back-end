@@ -31,6 +31,24 @@ exports.getRoleById = async (req, res) => {
     }
 };
 
+exports.getRoleBy = async (req, res) => {
+    try {
+      const libelle = req.body.libelle;
+
+      const role = await Role.findOne({ libelle: { $regex: new RegExp(libelle, 'i') } });
+  
+      if (!role) {
+        res.status(404).json({ message: 'Role not found' });
+        return;
+      }
+  
+      res.status(200).json(role);
+    } catch (error) {
+      console.error("Error in getRoleBy:", error);
+      res.status(500).json({ message: error.message });
+    }
+};
+
 exports.updateRole = async (req, res) => {
     try {
         const role = await Role.findByIdAndUpdate(req.params.id, req.body, { new: true });

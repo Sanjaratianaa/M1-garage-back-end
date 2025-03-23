@@ -5,7 +5,7 @@ exports.createMarque = async (req, res) => {
     try {
         const marqueData = {
             ...req.body,
-            manager: "67d7ce46ebc404449c7180b0",
+            // manager: "67d7ce46ebc404449c7180b0", 
         };
         const marqueSave = new Marque(marqueData);
         await marqueSave.save();
