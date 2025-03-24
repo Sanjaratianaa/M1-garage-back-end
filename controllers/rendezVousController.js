@@ -191,65 +191,86 @@ exports.getListRendezVousByMecanicien = async (req, res) => {
     }
 };
 
-exports.validateRendezVous = async (req, res) => {
+exports.modifierRendezVous = async (req, res) => {
     try {
         const rendezVousId = req.params.rendezVousId;
-        const validateurId = req.body.validateurId;
+        const actions = req.body.actions;
 
         if (!mongoose.Types.ObjectId.isValid(rendezVousId)) {
             return res.status(400).json({ message: "ID de rendez-vous invalide." });
         }
-        if (!mongoose.Types.ObjectId.isValid(validateurId)) {
-            return res.status(400).json({ message: "ID de validateur invalide." });
+
+        if (!Array.isArray(actions)) {
+            return res.status(400).json({ message: "Les actions doivent être un tableau." });
         }
 
-        const rendezVousMisAJour = await RendezVous.findByIdAndUpdate(
-            rendezVousId,
-            { etat: 'validé', validateur: validateurId },
-            { new: true }
-        ).populate({
-            path: 'client',
-            populate: {
-                path: 'personne',
-                model: 'Personne'
+        let updates = {};
+        let hasUpdates = false;
+
+        for (const actionObj of actions) {
+            const action = actionObj.action;
+            const { validateurId, nouveauMecanicienId, raisonRejet } = actionObj;
+
+            const actionsValides = ['validé', 'rejeté', 'assignerMecanicien'];
+
+            if (!actionsValides.includes(action)) {
+                return res.status(400).json({ message: `Action invalide : ${action}.` });
             }
-        })
-        .populate({
-            path: 'voiture',
-            populate: [
-                { path: 'marque' },
-                { path: 'modele' },
-                { path: 'categorie' },
-                { path: 'typeTransmission' }
-            ]
-        })
-        .populate({
-            path: 'services',
-            populate: [
-                {
-                    path: 'sousSpecialite',
-                    model: 'SousService',
-                    populate: {
-                        path: 'service',
-                        model: 'Service'
-                    }
-                },
-                { path: 'mecanicien', model: 'Personne' }
-            ]
-        })
-        .populate({
-            path: 'piecesAchetees.piece',
-            model: 'Piece'
-        });
 
-        if (!rendezVousMisAJour) {
-            return res.status(404).json({ message: "Rendez-vous non trouvé." });
+            switch (action) {
+                case 'validé':
+                    if (!mongoose.Types.ObjectId.isValid(validateurId)) {
+                        return res.status(400).json({ message: "ID de validateur invalide." });
+                    }
+                    updates.etat = 'validé';
+                    updates.validateur = validateurId;
+                    hasUpdates = true;
+                    break;
+
+                case 'rejeté':
+                    if (!raisonRejet) {
+                        return res.status(400).json({ message: "La raison du rejet est obligatoire." });
+                    }
+                    updates.etat = 'rejeté';
+                    updates.raisonRejet = raisonRejet;
+                    hasUpdates = true;
+                    break;
+
+                case 'assignerMecanicien':
+                    if (!mongoose.Types.ObjectId.isValid(nouveauMecanicienId)) {
+                        return res.status(400).json({ message: "ID de mécanicien invalide." });
+                    }
+                    updates["services.$[].mecanicien"] = nouveauMecanicienId;
+                    hasUpdates = true;
+                    break;
+            }
         }
 
+        // Mettre à jour le rendez-vous (seulement s'il y a des mises à jour)
+        let rendezVousMisAJour;
+        if (hasUpdates) {
+            rendezVousMisAJour = await populateRendezVous(RendezVous.findByIdAndUpdate(
+                rendezVousId,
+                updates,
+                { new: true }
+            ));
+
+
+            if (!rendezVousMisAJour) {
+                return res.status(404).json({ message: "Rendez-vous non trouvé." });
+            }
+        } else {
+             rendezVousMisAJour = await populateRendezVous(RendezVous.findById(rendezVousId));
+
+
+              if (!rendezVousMisAJour) {
+                return res.status(404).json({ message: "Rendez-vous non trouvé." });
+            }
+        }
         res.status(200).json(rendezVousMisAJour);
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Erreur serveur lors de la validation du rendez-vous." });
+        res.status(500).json({ message: "Erreur serveur lors de la modification du rendez-vous." });
     }
 };
