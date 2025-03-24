@@ -4,7 +4,8 @@ const gestionStockController = require('../../controllers/stock/gestionStockCont
 
 router.post('/', gestionStockController.createGestionStock);
 router.get('/', gestionStockController.getAllGestionStocks);
-router.get('/:id', gestionStockController.getGestionStockById);
+router.get('/mouvement/:id', gestionStockController.getGestionStockById);
+router.get('/stocks', gestionStockController.getStocks);
 router.put('/:id', gestionStockController.updateGestionStock);
 router.delete('/:id', gestionStockController.deleteGestionStock);
 
