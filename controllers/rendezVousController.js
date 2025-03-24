@@ -190,3 +190,66 @@ exports.getListRendezVousByMecanicien = async (req, res) => {
         res.status(500).json({ message: "Erreur serveur lors de la récupération des rendez-vous par mécanicien." });
     }
 };
+
+exports.validateRendezVous = async (req, res) => {
+    try {
+        const rendezVousId = req.params.rendezVousId;
+        const validateurId = req.body.validateurId;
+
+        if (!mongoose.Types.ObjectId.isValid(rendezVousId)) {
+            return res.status(400).json({ message: "ID de rendez-vous invalide." });
+        }
+        if (!mongoose.Types.ObjectId.isValid(validateurId)) {
+            return res.status(400).json({ message: "ID de validateur invalide." });
+        }
+
+        const rendezVousMisAJour = await RendezVous.findByIdAndUpdate(
+            rendezVousId,
+            { etat: 'validé', validateur: validateurId },
+            { new: true }
+        ).populate({
+            path: 'client',
+            populate: {
+                path: 'personne',
+                model: 'Personne'
+            }
+        })
+        .populate({
+            path: 'voiture',
+            populate: [
+                { path: 'marque' },
+                { path: 'modele' },
+                { path: 'categorie' },
+                { path: 'typeTransmission' }
+            ]
+        })
+        .populate({
+            path: 'services',
+            populate: [
+                {
+                    path: 'sousSpecialite',
+                    model: 'SousService',
+                    populate: {
+                        path: 'service',
+                        model: 'Service'
+                    }
+                },
+                { path: 'mecanicien', model: 'Personne' }
+            ]
+        })
+        .populate({
+            path: 'piecesAchetees.piece',
+            model: 'Piece'
+        });
+
+        if (!rendezVousMisAJour) {
+            return res.status(404).json({ message: "Rendez-vous non trouvé." });
+        }
+
+        res.status(200).json(rendezVousMisAJour);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur serveur lors de la validation du rendez-vous." });
+    }
+};

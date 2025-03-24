@@ -5,6 +5,9 @@ const rendezVousController = require('../controllers/rendezVousController');
 router.post('/', rendezVousController.createRendezVous);
 router.get('/', rendezVousController.getAllRendezVous);
 router.get('/:id', rendezVousController.getRendezVousById);
+router.get('parClient/:clientId', rendezVousController.getListRendezVousByClient);
+router.get('parMecanicien/:mecanicienId', rendezVousController.getListRendezVousByMecanicien);
+router.get('parEtat/:id', rendezVousController.getListRendezVousByEtat);
 router.put('/:id', rendezVousController.updateRendezVous);
 router.delete('/:id', rendezVousController.deleteRendezVous);
 

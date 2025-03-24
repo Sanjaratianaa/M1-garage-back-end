@@ -158,3 +158,19 @@ exports.deleteCategorie = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+exports.getAllCategoriesActives = async (req, res) => {
+    try {
+        const categories = await Categorie.find({etat: "Active"})
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            });
+        res.json(categories);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
