@@ -10,7 +10,7 @@ const secretKey = 'M1-project-MEAN';
 const AuthenticationService = {
     authenticateUser: async (email, password) => {
         try {
-            const personne = await Personne.findOne({ email: email });
+            const personne = await Personne.findOne({ email: email, etat: 'Active' });
 
             if (!personne) {
                 return { success: false, message: 'Invalid credentials' };
@@ -32,7 +32,7 @@ const AuthenticationService = {
 
             const payload = {
                 id: user._id,                 
-                username: user.personne.nom + ' ' + user.personne.prenom,
+                username: `${user.personne.nom} ${user.personne.prenom}`,
                 email: user.personne.email, 
                 matricule: user.matricule || null, 
                 role: user.idRole   

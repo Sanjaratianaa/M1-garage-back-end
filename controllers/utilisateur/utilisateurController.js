@@ -92,11 +92,66 @@ exports.updateUser = async (req, res) => {
 
 exports.deleteUser = async (req, res) => {
     try {
-        const utilisateur = await Utilisateur.findByIdAndDelete(req.params.id);
+        const utilisateur = await Utilisateur.findByIdAndUpdate(
+            req.params.id,
+            {
+                etat: 'Inactive',
+                dateSuppression: new Date()
+            },
+            { new: true }
+        )
+            .populate({
+                path: 'personne',
+                model: 'Personne'
+            })
+            .populate({
+                path: 'idRole',
+                model: 'Role'
+            })
+
         if (!utilisateur) {
             return res.status(404).json({ message: 'Utilisateur not found' });
         }
-        res.json({ message: 'Utilisateur deleted' });
+        res.json(utilisateur);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const removeAccents = (str) => {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+};
+
+exports.getActiveUsersByRole = async (req, res) => {
+    try {
+        const roleName = req.body.role;
+        if (!roleName) {
+            return res.status(400).json({ message: 'Role is required' });
+        }
+
+        const normalizedRoleName = removeAccents(roleName.toLowerCase());
+
+        const utilisateurs = await Utilisateur.find({
+            etat: 'Active',
+        })
+        .populate({
+            path: 'personne',
+            match: { etat: 'Active' },
+        })
+        .populate({
+            path: 'idRole',
+            match: {
+                libelle: { 
+                    $regex: new RegExp(`^${normalizedRoleName}$`, 'i')
+                }
+            },
+        });
+
+        const filteredUtilisateurs = utilisateurs.filter(utilisateur => 
+            utilisateur.personne && utilisateur.idRole
+        );
+
+        res.json(filteredUtilisateurs);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

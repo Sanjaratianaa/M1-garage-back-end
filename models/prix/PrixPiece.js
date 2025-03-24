@@ -6,6 +6,25 @@ const PrixPieceSchema = new mongoose.Schema({
         ref: 'Piece', 
         required: true 
     },
+    marquePiece: { 
+        type: String, 
+        required: false 
+    },
+    marqueVoiture: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Marque', 
+        required: false 
+    },
+    modeleVoiture: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Modele', 
+        required: false 
+    },
+    typeTransmission: {
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'TypeTransmission', 
+        required: false 
+    },
     manager: { 
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'Utilisateur', 
@@ -17,6 +36,12 @@ const PrixPieceSchema = new mongoose.Schema({
     },
     prixUnitaire: { 
         type: Number, 
+        default: 0, 
+        required: true 
+    },
+    dateEnregistrement: { 
+        type: Date, 
+        default: Date.now, 
         required: true 
     }
 }, { timestamps: true });

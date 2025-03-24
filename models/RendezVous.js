@@ -3,57 +3,45 @@ const mongoose = require('mongoose');
 const RendezVousSchema = new mongoose.Schema({
     client: { 
         type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Utilisateur', 
-        required: true 
+        ref: 'Personne'
     },
     voiture: { 
         type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Voiture', 
-        required: true 
+        ref: 'Voiture'
     },
     services: [
         {
             sousSpecialite: { 
                 type: mongoose.Schema.Types.ObjectId, 
                 ref: 'SousService', 
-                required: true 
             },
             raison: { 
                 type: String, 
-                required: true 
             },
             mecanicien: { 
                 type: mongoose.Schema.Types.ObjectId, 
-                ref: 'Utilisateur', 
-                required: true 
+                ref: 'Personne', 
             },
             quantiteEstimee: { 
                 type: Number, 
-                required: true 
             },
             heureDebut: { 
                 type: Date, 
-                required: true 
             },
             heureFin: { 
                 type: Date, 
-                required: true 
             },
             quantiteFinale: { 
                 type: Number, 
-                required: true 
             },
             prixUnitaire: { 
                 type: Number, 
-                required: true 
             },
             prixTotal: { 
                 type: Number, 
-                required: true 
             },
             remise: { 
                 type: Number, 
-                required: true 
             },
             commentaire: { 
                 type: String },
@@ -64,49 +52,39 @@ const RendezVousSchema = new mongoose.Schema({
             status: { 
                 type: String, 
                 enum: ['en cours', 'en attente', 'suspendue', 'terminé'], 
-                required: true 
             }
         }
     ],
     dateHeureDemande: { 
         type: Date, 
-        default: Date.now, 
-        required: true 
+        default: Date.now
     },
     dateRendezVous: { 
-        type: Date, 
-        required: true 
+        type: Date
     },
     heureDebut: { 
-        type: Date, 
-        required: true 
+        type: Date
     },
     heureFin: { 
-        type: Date, 
-        required: true 
+        type: Date
     },
     piecesAchetees: [
         {
             piece: { 
                 type: mongoose.Schema.Types.ObjectId, 
                 ref: 'Piece', 
-                required: true 
             },
             quantite: { 
                 type: Number, 
-                required: true 
             },
             prixUnitaire: { 
                 type: Number, 
-                required: true 
             },
             prixTotal: { 
                 type: Number, 
-                required: true 
             },
             remise: { 
                 type: Number, 
-                required: true 
             },
             commentaire: { 
                 type: String }
@@ -115,10 +93,14 @@ const RendezVousSchema = new mongoose.Schema({
     remarque: { 
         type: String 
     },
+    validateur: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Personne'
+    },
     etat: { 
         type: String, 
         enum: ['en attente', 'validé', 'rejeté', 'annulé'], 
-        required: true 
+        default: 'en attente'
     }
 }, { timestamps: true });
 

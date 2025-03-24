@@ -28,8 +28,12 @@ const UtilisateurSchema = new mongoose.Schema({
     },
     etat: { 
         type: String, 
+        default: 'Active',
         required: true 
-    }
+    },
+    dateSuppression: { 
+        type: Date 
+    },
 }, { timestamps: true });
 
 UtilisateurSchema.index({ matricule: 1 }, { unique: true, sparse: true });

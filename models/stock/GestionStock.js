@@ -6,12 +6,33 @@ const GestionStockSchema = new mongoose.Schema({
         ref: 'Piece', 
         required: true 
     },
+    marquePiece: { 
+        type: String, 
+        required: false 
+    },
+    marqueVoiture: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Marque', 
+        required: false 
+    },
+    modeleVoiture: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Modele', 
+        required: false 
+    },
+    typeTransmission: {
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'TypeTransmission', 
+        required: false 
+    },
     entree: { 
         type: Number, 
+        default: 0,
         required: true 
     },
     sortie: { 
         type: Number, 
+        default: 0,
         required: true 
     },
     prixUnitaire: { 

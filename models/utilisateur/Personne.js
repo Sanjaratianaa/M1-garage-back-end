@@ -24,6 +24,7 @@ const PersonneSchema = new mongoose.Schema({
     },
     etat: { 
         type: String, 
+        default: 'Active',
         required: true 
     },
     numeroTelephone: { 
@@ -33,7 +34,11 @@ const PersonneSchema = new mongoose.Schema({
     email: { 
         type: String, 
         required: true, 
-        unique: true }
+        unique: true 
+    },
+    dateSuppression: { 
+        type: Date 
+    }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Personne', PersonneSchema);

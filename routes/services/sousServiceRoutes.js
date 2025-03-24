@@ -4,6 +4,7 @@ const sousServiceController = require('../../controllers/services/sousServiceCon
 
 router.post('/', sousServiceController.createSousService);
 router.get('/', sousServiceController.getAllSousServices);
+router.get('/active', sousServiceController.getAllSousServicesActives);
 router.get('/:id', sousServiceController.getSousServiceById);
 router.put('/:id', sousServiceController.updateSousService);
 router.delete('/:id', sousServiceController.deleteSousService);

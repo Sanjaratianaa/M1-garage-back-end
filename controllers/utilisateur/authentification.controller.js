@@ -36,6 +36,22 @@ const AuthenticationController = {
             res.status(500).json({success: false, message: result.message});
         }
     },
+
+    changePassword: async (req, res) => {
+
+        const email = req.body.email;
+        const oldPassword = req.body.oldPassword;
+        const newPassword = req.body.newPassword;
+        const confirmPassword = req.body.confirmPassword;
+
+        const result = await AuthenticationService.changePassword(email, oldPassword, newPassword, confirmPassword);
+
+        if (result.success) {
+            res.status(201).json({message: result.message, data: result.data});
+        } else {
+            res.status(500).json({message: result.message, data: result.data});
+        }
+    }
 };
 
 module.exports = AuthenticationController;

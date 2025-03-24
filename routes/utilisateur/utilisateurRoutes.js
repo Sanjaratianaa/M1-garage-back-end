@@ -8,4 +8,7 @@ router.get('/:id', utilisateurController.getUserById);
 router.put('/:id', utilisateurController.updateUser);
 router.delete('/:id', utilisateurController.deleteUser);
 
+// by role
+router.delete('/active-utilisateurs-by-role', utilisateurController.getActiveUsersByRole);
+
 module.exports = router;

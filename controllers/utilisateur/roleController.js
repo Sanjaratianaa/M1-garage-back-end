@@ -45,11 +45,19 @@ exports.updateRole = async (req, res) => {
 
 exports.deleteRole = async (req, res) => {
     try {
-        const role = await Role.findByIdAndDelete(req.params.id);
-         if (!role) {
+        const role = await Role.findByIdAndUpdate(
+            req.params.id,
+            {
+                etat: 'Inactive'
+            },
+            { new: true }
+        );
+
+        if (!role) {
             return res.status(404).json({ message: 'Role not found' });
         }
-        res.json({ message: 'Role deleted' });
+
+        res.json(role);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -24,6 +24,7 @@ const promotionRoutes = require('./promotionRoutes');
 const demandeCongeRoutes = require('./demandeCongeRoutes');
 const voitureRoutes = require('./voitureRoutes');
 const rendezVousRoutes = require('./rendezVousRoutes');
+const gestionStockRoutes = require('./stock/gestionStockRoutes');
 
 
 const authenticateToken = (req, res, next) => {
@@ -78,5 +79,6 @@ router.use('/promotions', promotionRoutes);
 router.use('/conges', demandeCongeRoutes);
 router.use('/voitures', voitureRoutes);
 router.use('/rendezVous', rendezVousRoutes);
+router.use('/stocks', gestionStockRoutes);
 
 module.exports = router;

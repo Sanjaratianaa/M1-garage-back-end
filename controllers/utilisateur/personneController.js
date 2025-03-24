@@ -59,3 +59,32 @@ exports.deletePersonne = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+exports.deletePersonne = async (req, res) => {
+    try {
+        const personne = await Personne.findByIdAndUpdate(
+            req.params.id,
+            {
+                etat: 'Inactive',
+                dateSuppression: new Date()
+            },
+            { new: true }
+        );
+
+        if (!personne) {
+            return res.status(404).json({ message: 'Personne not found' });
+        }
+
+        await Utilisateur.updateMany(
+            { personne: personne._id },
+            {
+                etat: 'Inactive',
+                dateSuppression: new Date()
+            }
+        );
+
+        res.json(personne);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
