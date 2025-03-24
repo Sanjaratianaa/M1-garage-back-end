@@ -9,6 +9,5 @@ router.get('parClient/:clientId', rendezVousController.getListRendezVousByClient
 router.get('parMecanicien/:mecanicienId', rendezVousController.getListRendezVousByMecanicien);
 router.get('parEtat/:id', rendezVousController.getListRendezVousByEtat);
 router.put('/:id', rendezVousController.updateRendezVous);
-router.delete('/:id', rendezVousController.deleteRendezVous);
 
 module.exports = router;

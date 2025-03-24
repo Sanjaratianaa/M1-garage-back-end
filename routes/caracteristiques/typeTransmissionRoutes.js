@@ -4,6 +4,7 @@ const typeTransmissionController = require('../../controllers/caracteristiques/t
 
 router.post('/', typeTransmissionController.createTypeTransmission);
 router.get('/', typeTransmissionController.getAllTypeTransmissions);
+router.get('/active', typeTransmissionController.getAllTypeTransmissionsActives);
 router.get('/:id', typeTransmissionController.getTypeTransmissionById);
 router.put('/:id', typeTransmissionController.updateTypeTransmission);
 router.delete('/:id', typeTransmissionController.deleteTypeTransmission);
