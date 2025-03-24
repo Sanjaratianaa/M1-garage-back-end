@@ -8,7 +8,7 @@ exports.createGestionStock = async (req, res) => {
     try {
         const gestionStockData = {
             ...req.body,
-            manager: "67d6f7ef67591179796c9d16",
+            manager: "67d7ce46ebc404449c7180b0",
         };
 
         if (gestionStockData.prixUnitaire < 0)

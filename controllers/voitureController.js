@@ -5,8 +5,11 @@ exports.createVoiture = async (req, res) => {
     try {
         const voitureData = {
             ...req.body,
-            manager: "67e0bf76e450ecc8422184eb",
+            client: "67e0e5e577aa08dadf5661c6",
         };
+
+        console.log(voitureData);
+
         const voitureSave = new Voiture(voitureData);
         await voitureSave.save();
 
@@ -25,6 +28,7 @@ exports.createVoiture = async (req, res) => {
 
         res.status(201).json(voiture);
     } catch (error) {
+        console.log(error);
         if (error.code === 11000) {
             return res.status(400).json({
                 message: `Le numero matricule "${req.body.numeroImmatriculation}" existe déjà. Veuillez vérifier.`,
@@ -57,7 +61,7 @@ exports.getAllVoitures = async (req, res) => {
 
 exports.getAllVoituresByClient = async (req, res) => {
     try {
-        const voitures = await Voiture.find({client : "67e0bf76e450ecc8422184eb"})
+        const voitures = await Voiture.find({client : "67e0e5e577aa08dadf5661c6"})
             .populate({
                 path: 'client',  // Peupler le client
                 populate: {
