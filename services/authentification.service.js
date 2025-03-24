@@ -4,6 +4,7 @@ const Utilisateur = require('../models/utilisateur/Utilisateur');
 const Personne = require('../models/utilisateur/Personne');
 const UtilisateurController = require('../controllers/utilisateur/utilisateurController');
 const PersonneController = require('../controllers/utilisateur/personneController');
+const RoleController = require('../controllers/utilisateur/roleController');
 
 const secretKey = 'M1-project-MEAN';
 
@@ -49,7 +50,6 @@ const AuthenticationService = {
 
     verifyToken: (token) => {
         try {
-            console.log("yesssssssssss");
             const decoded = jwt.verify(token, secretKey);
             return { success: true, user: decoded };
         } catch (error) {
@@ -107,11 +107,36 @@ const AuthenticationService = {
             }
 
             const personne = personneRes.data;
+            
+            const mockReq = { body: { libelle: idRole } };
+
+            const mockRes = {
+                status: (code) => {
+                    mockRes.statusCode = code;
+                    return mockRes;
+                },
+                json: (data) => {
+                    mockRes.data = data;
+                }
+            };
+
+            await RoleController.getRoleBy(mockReq, mockRes);
+
+            console.log("starting here: >>>>>>>>>>>> ");
+            console.log(mockRes);
+            console.log("starting here: >>>>>>>>>>>> " + JSON.stringify(mockRes));
+
+            if (mockRes.statusCode !== 200) {
+            throw new Error(`Role retrieval failed: ${mockRes.statusCode}: ${mockRes.data?.message || 'Unknown error'}`);
+            }
+
+            const roleResult = mockRes.data;
+            const roleId = roleResult._id;
 
             const utilisateurResponse = await UtilisateurController.createUserWithParams(
                 personne._id,
                 motDePasse,
-                idRole,
+                roleId,
                 dateEmbauche,
                 etat
             );
@@ -121,6 +146,18 @@ const AuthenticationService = {
             }
 
             const utilisateur = utilisateurResponse.data;
+
+            const matricule = utilisateur.matricule;
+
+            console.log("motDePasse:", motDePasse);
+            console.log("matricule:", matricule);
+
+            // for employe only
+            const finalMotDePasse = !motDePasse ? matricule : motDePasse;
+            const hashedPassword = await bcrypt.hash(finalMotDePasse, 10);
+            utilisateur.motDePasse = hashedPassword;
+
+            await utilisateur.save();
 
             const populatedUser = await Utilisateur.findById(utilisateur._id).populate('personne').populate('idRole');
 

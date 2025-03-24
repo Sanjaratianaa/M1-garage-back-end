@@ -54,11 +54,12 @@ UtilisateurSchema.pre('save', async function (next) {
     const Role = mongoose.model('Role');
     try {
         const role = await Role.findById(this.idRole);
+        const lowercaseLibelle = role.libelle.toLowerCase(); 
 
-        if (role.libelle === 'mecanicien' || role.libelle === 'manager') {
+        if (lowercaseLibelle === 'mecanicien' || lowercaseLibelle === 'mécanicien' || lowercaseLibelle === 'manager') {
             if (!this.matricule) {
                 let prefix;
-                if (role.libelle === 'mecanicien') {
+                if (lowercaseLibelle === 'mecanicien' || lowercaseLibelle === 'mécanicien') {
                     prefix = 'MEC';
                 } else {
                     prefix = 'MNG';

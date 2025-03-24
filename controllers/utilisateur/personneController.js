@@ -50,7 +50,14 @@ exports.updatePersonne = async (req, res) => {
 // Delete a person
 exports.deletePersonne = async (req, res) => {
     try {
-        const personne = await Personne.findByIdAndDelete(req.params.id);
+        const personne = await Personne.findByIdAndUpdate(
+            req.params.id,
+            {
+                etat: 'Inactive',  // Marquer comme supprimé
+                dateSuppression: new Date()
+            }, 
+            { new: true }
+        );
         if (!personne) {
             return res.status(404).json({ message: 'Personne not found' });
         }
