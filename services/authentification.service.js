@@ -159,7 +159,7 @@ const AuthenticationService = {
 
             await utilisateur.save();
 
-            const populatedUser = await Utilisateur.findById(utilisateur._id).populate('personne').populate('idRole');
+            const populatedUser = await Utilisateur.findById(utilisateur._id).populate({path:'personne', model:'Personne'}).populate('idRole');
 
             return { success: true, message: "User registered successfully", data: populatedUser };
         } catch (error) {

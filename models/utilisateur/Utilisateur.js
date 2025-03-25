@@ -42,12 +42,12 @@ async function getNextSequenceValue(role) {
     const counter = await mongoose.connection.db.collection('counters').findOneAndUpdate(
         { _id: `matricule_${role}` },
         { $inc: { seq: 1 } },
-        { upsert: true, returnDocument: 'after' } // Ensures the updated document is returned
+        { upsert: true, returnDocument: 'after' }
     );
 
     console.log('Counter result:', counter);
 
-    return counter?.seq ?? 1; // Ensure to get the correct sequence value
+    return counter?.seq ?? 1;
 }
 
 UtilisateurSchema.pre('save', async function (next) {
@@ -56,11 +56,13 @@ UtilisateurSchema.pre('save', async function (next) {
         const role = await Role.findById(this.idRole);
         const lowercaseLibelle = role.libelle.toLowerCase(); 
 
-        if (lowercaseLibelle === 'mecanicien' || lowercaseLibelle === 'mécanicien' || lowercaseLibelle === 'manager') {
+        if (lowercaseLibelle === 'mecanicien' || lowercaseLibelle === 'mécanicien' || lowercaseLibelle === 'manager' || lowercaseLibelle === 'client') {
             if (!this.matricule) {
                 let prefix;
                 if (lowercaseLibelle === 'mecanicien' || lowercaseLibelle === 'mécanicien') {
                     prefix = 'MEC';
+                } else if (lowercaseLibelle === 'client') {
+                    prefix = 'CLI'
                 } else {
                     prefix = 'MNG';
                 }
