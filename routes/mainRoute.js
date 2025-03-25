@@ -71,7 +71,7 @@ router.use('/transmissions', typeTransmissionRoutes);
 
 // prix
 router.use('/prixPieces', prixPieceRoutes);
-router.use('/ prixSousServices', prixSousServiceRoutes);
+router.use('/prixSousServices', prixSousServiceRoutes);
 
 // services
 router.use('/services', serviceRoutes);

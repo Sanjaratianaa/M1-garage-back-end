@@ -6,7 +6,7 @@ exports.createPrixPiece = async (req, res) => {
     try {
         const prixStockData = {
             ...req.body,
-            manager: "67d7ce46ebc404449c7180b0",
+            manager: req.user.id,
         };
 
         if (prixStockData.prixUnitaire < 0)

@@ -5,15 +5,25 @@ exports.createVoiture = async (req, res) => {
     try {
         const voitureData = {
             ...req.body,
-            client: "67e0e5e577aa08dadf5661c6",
+            client: req.user.id,
         };
 
-        console.log(voitureData);
+        if(req.body.kilometrage < 0)
+            throw new Error("Kilometrage indalide. La valeur doit etre supérieur ou égale à zéro.")
+
+        if(req.body.puissanceMoteur < 0)
+            throw new Error("Puissance Moteur indalide. La valeur doit etre supérieur ou égale à zéro.")
+
+        if(req.body.cylindree < 0)
+            throw new Error("Cylindrée indalide. La valeur doit etre supérieur ou égale à zéro.")
+
+        if(req.body.capaciteReservoir < 0)
+            throw new Error("Capacite de réservoir indalide. La valeur doit etre supérieur ou égale à zéro.")
 
         const voitureSave = new Voiture(voitureData);
         await voitureSave.save();
 
-        const voiture = await Voiture.findById(req.params.id)
+        const voiture = await Voiture.findById(voitureSave._id)
             .populate({
                 path: 'client',  // Peupler le client
                 populate: {
@@ -24,7 +34,7 @@ exports.createVoiture = async (req, res) => {
             .populate('marque')
             .populate('modele')
             .populate('categorie')
-            .populate('typeTransmission');
+            .populate('typeTransmission');        
 
         res.status(201).json(voiture);
     } catch (error) {
@@ -61,7 +71,7 @@ exports.getAllVoitures = async (req, res) => {
 
 exports.getAllVoituresByClient = async (req, res) => {
     try {
-        const voitures = await Voiture.find({client : "67e0e5e577aa08dadf5661c6"})
+        const voitures = await Voiture.find({client : req.user.id})
             .populate({
                 path: 'client',  // Peupler le client
                 populate: {
@@ -106,6 +116,18 @@ exports.getVoitureById = async (req, res) => {
 // Update a Voiture
 exports.updateVoiture = async (req, res) => {
     try {
+        if(req.body.kilometrage < 0)
+            throw new Error("Kilometrage indalide. La valeur doit etre supérieur ou égale à zéro.")
+
+        if(req.body.puissanceMoteur < 0)
+            throw new Error("Puissance Moteur indalide. La valeur doit etre supérieur ou égale à zéro.")
+
+        if(req.body.cylindree < 0)
+            throw new Error("Cylindrée indalide. La valeur doit etre supérieur ou égale à zéro.")
+
+        if(req.body.capaciteReservoir < 0)
+            throw new Error("Capacite de réservoir indalide. La valeur doit etre supérieur ou égale à zéro.")
+        
         const voiture = await Voiture.findByIdAndUpdate(
             req.params.id,
             req.body,

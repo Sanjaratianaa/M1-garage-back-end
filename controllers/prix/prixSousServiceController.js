@@ -5,7 +5,7 @@ exports.createPrixSousService = async (req, res) => {
     try {
         const prixSousServiceData = {
             ...req.body,
-            manager: "67d7ce46ebc404449c7180b0",
+            manager: req.user.id,
         };
 
         if (prixSousServiceData.prixUnitaire < 0)
