@@ -36,7 +36,8 @@ const AuthenticationService = {
                 username: `${user.personne.nom} ${user.personne.prenom}`,
                 email: user.personne.email, 
                 matricule: user.matricule || null, 
-                role: user.idRole   
+                role: user.idRole,
+                idPersonne: user.personne._id
             };
 
             const token = jwt.sign(payload, secretKey, { expiresIn: '1h' });
