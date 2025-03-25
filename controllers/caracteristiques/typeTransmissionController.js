@@ -6,7 +6,7 @@ exports.createTypeTransmission = async (req, res) => {
     try {
         const typeTransmissionData = {
             ...req.body,
-            manager: "67d7ce46ebc404449c7180b0",
+            manager: req.user.id,
         };
         const typeTransmissionSave = new TypeTransmission(typeTransmissionData);
         await typeTransmissionSave.save();
@@ -143,7 +143,7 @@ exports.deleteTypeTransmission = async (req, res) => {
             {
                 etat: 'Inactive',  // TypeTransmissionr comme supprimé
                 dateSuppression: new Date(),  // Enregistrer la date
-                managerSuppression: "67d7ce46ebc404449c7180b0"  // Qui a supprimé ?
+                managerSuppression: req.user.id  // Qui a supprimé ?
             },
             { new: true }
         )

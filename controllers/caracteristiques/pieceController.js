@@ -5,7 +5,7 @@ exports.createPiece = async (req, res) => {
     try {
         const pieceData = {
             ...req.body,
-            manager: "67d6f7ef67591179796c9d16",
+            manager: req.user.id,
         };
         const pieceSave = new Piece(pieceData);
         await pieceSave.save();
@@ -145,7 +145,7 @@ exports.deletePiece = async (req, res) => {
             {
                 etat: 'Inactive',  // Piecer comme supprimé
                 dateSuppression: new Date(),  // Enregistrer la date
-                managerSuppression: "67d6f7ef67591179796c9d16"  // Qui a supprimé ?
+                managerSuppression: req.user.id  // Qui a supprimé ?
             },
             { new: true }
         )

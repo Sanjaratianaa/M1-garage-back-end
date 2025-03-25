@@ -6,8 +6,12 @@ exports.createSousService = async (req, res) => {
     try {
         const sousServiceData = {
             ...req.body,
-            manager: "67d7ce46ebc404449c7180b0",
+            manager: req.user.id,
         };
+
+        if(req.body.duree < 0)
+            throw new Error("Durée invalide. La durée doit etre supérieur à 0mn");
+
         const sousServiceSave = new SousService(sousServiceData);
         await sousServiceSave.save();
         const sousService = await SousService.findById(sousServiceSave.id)
@@ -33,31 +37,6 @@ exports.createSousService = async (req, res) => {
             res.status(400).json({ message: error.message });
     }
 };
-
-// Get all SousServices
-// exports.getAllSousServices = async (req, res) => {
-//     try {
-//         const sousServices = await SousService.find()
-//             .populate('service')
-//             .populate({
-//                 path: 'manager',  // Peupler le manager
-//                 populate: {
-//                     path: 'personne',  // Peupler la personne
-//                     model: 'Personne'  // Spécifie le modèle à peupler
-//                 }
-//             })
-//             .populate({
-//                 path: 'managerSuppression',  // Peupler le manager
-//                 populate: {
-//                     path: 'personne',  // Peupler la personne
-//                     model: 'Personne'  // Spécifie le modèle à peupler
-//                 }
-//             });
-//         res.json(sousServices);
-//     } catch (error) {
-//         res.status(500).json({ message: error.message });
-//     }
-// };
 
 exports.getAllSousServices = async (req, res) => {
     try {
@@ -197,7 +176,7 @@ exports.deleteSousService = async (req, res) => {
             {
                 etat: 'Inactive',  // Servicer comme supprimé
                 dateSuppression: new Date(),  // Enregistrer la date
-                managerSuppression: "67d7ce46ebc404449c7180b0"  // Qui a supprimé ?
+                managerSuppression: req.user.id  // Qui a supprimé ?
             },
             { new: true }
         )

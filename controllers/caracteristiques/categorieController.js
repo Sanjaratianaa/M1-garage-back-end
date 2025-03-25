@@ -5,7 +5,7 @@ exports.createCategorie = async (req, res) => {
     try {
         const categorieData = {
             ...req.body,
-            manager: "67d7ce46ebc404449c7180b0",
+            manager: req.user.id,
         };
         const categorieSave = new Categorie(categorieData);
         await categorieSave.save();
@@ -129,7 +129,7 @@ exports.deleteCategorie = async (req, res) => {
             {
                 etat: 'Inactive',  // Categorier comme supprimé
                 dateSuppression: new Date(),  // Enregistrer la date
-                managerSuppression: "67d7ce46ebc404449c7180b0"  // Qui a supprimé ?
+                managerSuppression: req.user.id  // Qui a supprimé ?
             },
             { new: true }
         )
