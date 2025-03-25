@@ -1,4 +1,5 @@
 const Utilisateur = require('../../models/utilisateur/Utilisateur');
+const Role = require('../../models/utilisateur/Role');
 const bcrypt = require('bcrypt');
 
 exports.createUserWithParams = async (personne, motDePasse, idRole, dateEmbauche, etat, res) => {
@@ -124,27 +125,28 @@ const removeAccents = (str) => {
 
 exports.getActiveUsersByRole = async (req, res) => {
     try {
-        const roleName = req.body.role;
+        const roleName = req.query.role;
         if (!roleName) {
             return res.status(400).json({ message: 'Role is required' });
         }
 
-        const normalizedRoleName = removeAccents(roleName.toLowerCase());
+        const normalizedRoleName = roleName.toLowerCase();
+
+        const role = await Role.findOne({
+            libelle: { $regex: new RegExp(`^${normalizedRoleName}$`, 'i') }
+        });
+
+        if (!role) {
+            return res.status(404).json({ message: 'Role not found' });
+        }
 
         const utilisateurs = await Utilisateur.find({
             etat: 'Active',
+            idRole: role._id
         })
         .populate({
             path: 'personne',
             match: { etat: 'Active' },
-        })
-        .populate({
-            path: 'idRole',
-            match: {
-                libelle: { 
-                    $regex: new RegExp(`^${normalizedRoleName}$`, 'i')
-                }
-            },
         });
 
         const filteredUtilisateurs = utilisateurs.filter(utilisateur => 

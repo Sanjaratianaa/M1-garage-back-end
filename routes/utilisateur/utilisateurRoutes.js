@@ -4,11 +4,12 @@ const utilisateurController = require('../../controllers/utilisateur/utilisateur
 
 router.post('/', utilisateurController.createUser);
 router.get('/', utilisateurController.getAllUsers);
+
+// by role
+router.get('/active-utilisateurs-by-role', utilisateurController.getActiveUsersByRole);
+
 router.get('/:id', utilisateurController.getUserById);
 router.put('/:id', utilisateurController.updateUser);
 router.delete('/:id', utilisateurController.deleteUser);
-
-// by role
-router.delete('/active-utilisateurs-by-role', utilisateurController.getActiveUsersByRole);
 
 module.exports = router;
