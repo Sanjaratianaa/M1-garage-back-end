@@ -25,6 +25,7 @@ const demandeCongeRoutes = require('./demandeCongeRoutes');
 const voitureRoutes = require('./voitureRoutes');
 const rendezVousRoutes = require('./rendezVousRoutes');
 const gestionStockRoutes = require('./stock/gestionStockRoutes');
+const specialiteRoutes = require('./utilisateur/specialiteRoutes');
 
 const secretKey = 'M1-project-MEAN';
 const jwt = require('jsonwebtoken');
@@ -83,5 +84,6 @@ router.use('/conges', demandeCongeRoutes);
 router.use('/voitures', voitureRoutes);
 router.use('/rendezVous', rendezVousRoutes);
 router.use('/stocks', gestionStockRoutes);
+router.use('/specialites', specialiteRoutes);
 
 module.exports = router;
