@@ -14,7 +14,7 @@ const AuthenticationService = {
             const personne = await Personne.findOne({ email: email, etat: 'Active' });
 
             if (!personne) {
-                return { success: false, message: 'Invalid credentials' };
+                return { success: false, message: 'Email ou mot de passe incorrect' };
             }
 
             const user = await Utilisateur.findOne({ personne: personne._id })
@@ -22,13 +22,13 @@ const AuthenticationService = {
                 .populate('idRole');
 
             if (!user) {
-                return { success: false, message: 'Invalid credentials' };
+                return { success: false, message: 'Email ou mot de passe incorrect' };
             }
 
             const passwordMatch = await bcrypt.compare(password, user.motDePasse);
 
             if (!passwordMatch) {
-                return { success: false, message: 'Invalid credentials' };
+                return { success: false, message: 'Email ou mot de passe incorrect' };
             }
 
             const payload = {
