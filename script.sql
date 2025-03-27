@@ -114,3 +114,24 @@ db.gestionstocks.aggregate([
 ... ]);
 
 db.stocks.find({ "marqueVoiture": null, "piece._id": ObjectId("67dcb6ec52052d86ff8ac06f") }).pretty()
+
+//
+
+db.counters.insertOne({ _id: "matricule_mecanicien", seq: 0 })
+db.counters.insertOne({ _id: "matricule_manager", seq: 0 })
+db.counters.insertOne({ _id: "matricule_client", seq: 0 })
+
+{
+  "client": "67e3071118c9673f291d3ad5",
+  "voiture": "67e2701349b59270464e2879",
+  "services": [
+    {
+      "sousSpecialite": "67e256a9811b3e52c586a96a",
+      "raison": "Vidange d’huile",
+      "quantiteEstimee": 30,
+      "prixUnitaire": 8000
+    }
+  ],
+  "mecanicien": "67e45508c4546a2b066d5d0a",
+  "dateRendezVous": "2025-04-08T08:00:00.000Z"
+}
