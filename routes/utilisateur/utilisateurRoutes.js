@@ -7,6 +7,7 @@ router.get('/', utilisateurController.getAllUsers);
 
 // by role
 router.get('/active-utilisateurs-by-role', utilisateurController.getActiveUsersByRole);
+router.get('/utilisateurs-by-role', utilisateurController.getAllUsersByRole);
 
 router.get('/:id', utilisateurController.getUserById);
 router.put('/:id', utilisateurController.updateUser);
