@@ -158,3 +158,37 @@ exports.getActiveUsersByRole = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+exports.getAllUsersByRole = async (req, res) => {
+    try {
+        const roleName = req.query.role;
+        if (!roleName) {
+            return res.status(400).json({ message: 'Role is required' });
+        }
+
+        const normalizedRoleName = roleName.toLowerCase();
+
+        const role = await Role.findOne({
+            libelle: { $regex: new RegExp(`^${normalizedRoleName}$`, 'i') }
+        });
+
+        if (!role) {
+            return res.status(404).json({ message: 'Role not found' });
+        }
+
+        const utilisateurs = await Utilisateur.find({
+            idRole: role._id
+        })
+        .populate({
+            path: 'personne',
+        });
+
+        const filteredUtilisateurs = utilisateurs.filter(utilisateur => 
+            utilisateur.personne && utilisateur.idRole
+        );
+
+        res.json(filteredUtilisateurs);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};

@@ -8,6 +8,10 @@ exports.createSpecialite = async (req, res) => {
             manager: req.user.id,
         };
 
+        const specialiteExist = await Specialite.findOne({ mecanicien: specialiteData.mecanicien, sousService: specialiteData.sousService, etat: 'Active' });
+        if(specialiteExist)
+            throw new Error("Ajout invalide : Ce mécanicien possède déjà cette spécialité.");
+
         const specialiteSave = new Specialite(specialiteData);
         await specialiteSave.save();
         const specialite = await Specialite.findById(specialiteSave.id)
@@ -157,6 +161,11 @@ exports.updateSpecialite = async (req, res) => {
     try {
         const today = new Date(); // Date du jour
 
+        const specialiteExist = await Specialite.findOne({ _id: { $ne: req.body._id }, mecanicien: req.body.mecanicien, sousService: req.body.sousService, etat: 'Active' });
+        console.log(specialiteExist);
+        if(specialiteExist)
+            throw new Error("Ajout invalide : Ce mécanicien possède déjà cette spécialité.");
+
         const specialite = await Specialite.findByIdAndUpdate(
             req.params.id,
             req.body,
@@ -197,13 +206,8 @@ exports.updateSpecialite = async (req, res) => {
 
         res.json(specialite);
     } catch (error) {
-        if (error.code === 11000) {
-            console.log("tafiditaaa");
-            return res.status(400).json({
-                message: `Le sous service "${req.body.libelle}" existe déjà. Veuillez choisir un autre sous service.`,
-            });
-        } else
-            res.status(400).json({ message: error.message });
+        console.error(error);
+        res.status(400).json({ message: error.message });
     }
 };
 

@@ -31,6 +31,11 @@ const UtilisateurSchema = new mongoose.Schema({
         default: 'Active',
         required: true 
     },
+    dateEnregistrement: { 
+        type: Date,
+        default: Date.now,
+        required: true 
+    },
     dateSuppression: { 
         type: Date 
     },
