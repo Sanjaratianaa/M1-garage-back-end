@@ -8,14 +8,21 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
+
+// const corsOptions = {
+//     origin: 'http://your-client-domain.com',
+//     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+//     credentials: true, 
+//     allowedHeaders: ['Content-Type', 'Authorization'],
+// };
+// app.use(cors(corsOptions));
+
 app.use(express.json());
 
 // Connexion à MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-}).then(() => console.log("MongoDB connecté"))
-.catch(err => console.log(err));
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB connecté"))
+  .catch(err => console.log(err));
 
  // Routes
 const mainRoutes = require('./routes/mainRoute');
