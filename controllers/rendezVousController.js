@@ -4,28 +4,69 @@ const RendezVous = require('../models/RendezVous');
 exports.createRendezVous = async (req, res) => {
     try {
         const data = req.body;
+        data.client = req.user.idPersonne;
 
-        if (!data.client || !data.voiture || !data.services || !data.dateRendezVous || !data.mecanicien) {
-            throw new Error("Les champs client, voiture et dateRendezVous sont obligatoires.");
+        const today = new Date();
+        const dateToCheck = new Date(data.dateRendezVous); // Conversion en Date
+
+        console.log(dateToCheck + " < ? " + today);
+
+        if (dateToCheck < today) 
+            throw new Error(`Date et heure du rendez-vous invalide. La Date et heure du rendez-vous doit être supérieure ou égale à la date et heure du jour.`);
+
+        if (!data.client || !data.voiture || !data.services || !data.dateRendezVous) {
+            throw new Error("Les champs client, voiture et date du Rendez-vous sont obligatoires.");
         }
 
-        const servicesAvecMecanicien = data.services.map(service => {
-            return {
-                ...service,
-                mecanicien: data.mecanicien
-            };
-        });
+        // const servicesAvecMecanicien = data.services.map(service => {
+        //     return {
+        //         ...service,
+        //         mecanicien: data.mecanicien
+        //     };
+        // });
 
-        const rendezVousData = {
-            ...data,
-            services: servicesAvecMecanicien
-        };
+        // const rendezVousData = {
+        //     ...data,
+        //     services: servicesAvecMecanicien
+        // };
 
-        const rendezVous = new RendezVous(rendezVousData);
+        const rendezVousSave = new RendezVous(data);
+        rendezVousSave.etat = 'en attente';
+        await rendezVousSave.save();
 
-        rendezVous.etat = 'en attente';
+        const rendezVous = await RendezVous.findById(rendezVousSave._id)
+            .populate('client')
+            .populate({
+                path: 'voiture',
+                populate: [
+                    { path: 'marque' },
+                    { path: 'modele' },
+                    { path: 'categorie' },
+                    { path: 'typeTransmission' }
+                ]
+            })
+            .populate({
+                path: 'services',
+                populate: [
+                    {
+                        path: 'sousSpecialite',
+                        model: 'SousService',
+                        populate: {
+                            path: 'service',
+                            model: 'Service'
+                        }
+                    },
+                    { path: 'mecanicien', model: 'Personne' }
+                ]
+            })
+            .populate({
+                path: 'piecesAchetees.piece',
+                model: 'Piece'
+            })
+            .sort({ dateHeureDemande: -1 });
 
-        await rendezVous.save();
+        console.log(rendezVous);
+
         res.status(201).json(rendezVous);
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -35,11 +76,39 @@ exports.createRendezVous = async (req, res) => {
 // Get all RendezVous
 exports.getAllRendezVous = async (req, res) => {
     try {
-        const rendezVousList = await RendezVous.find()
+        var query = {};
+        if(req.user.role.libelle == "client")
+            query = {client : req.user.idPersonne};
+
+        const rendezVousList = await RendezVous.find(query)
             .populate('client')
-            .populate('voiture')
-            .populate('services.sousSpecialite')
-            .populate('services.mecanicien')
+            .populate({
+                path: 'voiture',
+                populate: [
+                    { path: 'marque' },
+                    { path: 'modele' },
+                    { path: 'categorie' },
+                    { path: 'typeTransmission' }
+                ]
+            })
+            .populate({
+                path: 'services',
+                populate: [
+                    {
+                        path: 'sousSpecialite',
+                        model: 'SousService',
+                        populate: {
+                            path: 'service',
+                            model: 'Service'
+                        }
+                    },
+                    { path: 'mecanicien', model: 'Personne' }
+                ]
+            })
+            .populate({
+                path: 'piecesAchetees.piece',
+                model: 'Piece'
+            })
             .populate('piecesAchetees.piece')
             .sort({ dateHeureDemande: -1 });
         res.json(rendezVousList);
@@ -173,12 +242,16 @@ async function getRendezVous(query, res) {
 // prendre rendezVous par etat
 exports.getListRendezVousByEtat = async (req, res) => {
     try {
+        var query = {};
+        if(req.user.role.libelle == "client")
+            query = {client : req.user.idPersonne};
+
         const etat = req.params.etat;
         const etatsValides = ['en attente', 'validé', 'rejeté', 'annulé'];
         if (!etatsValides.includes(etat)) {
             return res.status(400).json({ message: "État de rendez-vous invalide." });
         }
-        const query = { etat: etat };
+        query.etat = etat ;
         await getRendezVous(query, res); // Utiliser la fonction utilitaire
 
     } catch (error) {
