@@ -40,7 +40,8 @@ exports.getAllRendezVous = async (req, res) => {
             .populate('voiture')
             .populate('services.sousSpecialite')
             .populate('services.mecanicien')
-            .populate('piecesAchetees.piece');
+            .populate('piecesAchetees.piece')
+            .sort({ dateHeureDemande: -1 });
         res.json(rendezVousList);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -55,12 +56,14 @@ exports.getRendezVousById = async (req, res) => {
             .populate('voiture')
             .populate('services.sousSpecialite')
             .populate('services.mecanicien')
-            .populate('piecesAchetees.piece');
+            .populate('piecesAchetees.piece')
+            ;
         if (!rendezVous) {
             return res.status(404).json({ message: 'RendezVous not found' });
         }
         res.json(rendezVous);
     } catch (error) {
+        console.error(error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -73,11 +76,11 @@ exports.updateRendezVous = async (req, res) => {
             req.body,
             { new: true }
         )
-        .populate('client')
-        .populate('voiture')
-        .populate('services.sousSpecialite')
-        .populate('services.mecanicien')
-        .populate('piecesAchetees.piece');
+            .populate('client')
+            .populate('voiture')
+            .populate('services.sousSpecialite')
+            .populate('services.mecanicien')
+            .populate('piecesAchetees.piece');
 
         if (!rendezVous) {
             return res.status(404).json({ message: 'RendezVous not found' });
@@ -130,7 +133,36 @@ async function populateRendezVous(query) {
 // function globale
 async function getRendezVous(query, res) {
     try {
-        const rendezVous = await populateRendezVous(RendezVous.find(query)).exec();
+        const rendezVous = await RendezVous.find(query)
+            .populate('client')
+            .populate({
+                path: 'voiture',
+                populate: [
+                    { path: 'marque' },
+                    { path: 'modele' },
+                    { path: 'categorie' },
+                    { path: 'typeTransmission' }
+                ]
+            })
+            .populate({
+                path: 'services',
+                populate: [
+                    {
+                        path: 'sousSpecialite',
+                        model: 'SousService',
+                        populate: {
+                            path: 'service',
+                            model: 'Service'
+                        }
+                    },
+                    { path: 'mecanicien', model: 'Personne' }
+                ]
+            })
+            .populate({
+                path: 'piecesAchetees.piece',
+                model: 'Piece'
+            })
+            .sort({ dateHeureDemande: -1 });
         res.status(200).json(rendezVous);
     } catch (error) {
         console.error(error);
@@ -141,15 +173,13 @@ async function getRendezVous(query, res) {
 // prendre rendezVous par etat
 exports.getListRendezVousByEtat = async (req, res) => {
     try {
-        const etat = req.body.etat;
-
+        const etat = req.params.etat;
         const etatsValides = ['en attente', 'validé', 'rejeté', 'annulé'];
-
         if (!etatsValides.includes(etat)) {
             return res.status(400).json({ message: "État de rendez-vous invalide." });
         }
-
-        await getRendezVous({ etat: etat }, res); // Utiliser la fonction utilitaire
+        const query = { etat: etat };
+        await getRendezVous(query, res); // Utiliser la fonction utilitaire
 
     } catch (error) {
         console.error(error);
@@ -260,10 +290,10 @@ exports.modifierRendezVous = async (req, res) => {
                 return res.status(404).json({ message: "Rendez-vous non trouvé." });
             }
         } else {
-             rendezVousMisAJour = await populateRendezVous(RendezVous.findById(rendezVousId));
+            rendezVousMisAJour = await populateRendezVous(RendezVous.findById(rendezVousId));
 
 
-              if (!rendezVousMisAJour) {
+            if (!rendezVousMisAJour) {
                 return res.status(404).json({ message: "Rendez-vous non trouvé." });
             }
         }
