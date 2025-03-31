@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const RendezVous = require('../models/RendezVous');
 
 // Create a new RendezVous
@@ -11,24 +12,12 @@ exports.createRendezVous = async (req, res) => {
 
         console.log(dateToCheck + " < ? " + today);
 
-        if (dateToCheck < today) 
+        if (dateToCheck < today)
             throw new Error(`Date et heure du rendez-vous invalide. La Date et heure du rendez-vous doit être supérieure ou égale à la date et heure du jour.`);
 
         if (!data.client || !data.voiture || !data.services || !data.dateRendezVous) {
             throw new Error("Les champs client, voiture et date du Rendez-vous sont obligatoires.");
         }
-
-        // const servicesAvecMecanicien = data.services.map(service => {
-        //     return {
-        //         ...service,
-        //         mecanicien: data.mecanicien
-        //     };
-        // });
-
-        // const rendezVousData = {
-        //     ...data,
-        //     services: servicesAvecMecanicien
-        // };
 
         const rendezVousSave = new RendezVous(data);
         rendezVousSave.etat = 'en attente';
@@ -77,8 +66,18 @@ exports.createRendezVous = async (req, res) => {
 exports.getAllRendezVous = async (req, res) => {
     try {
         var query = {};
-        if(req.user.role.libelle == "client")
-            query = {client : req.user.idPersonne};
+        if (req.user.role.libelle == "client")
+            query = {
+                $or: [
+                    { client: req.user.idPersonne },
+                    {
+                        client: { $ne: req.user.idPersonne },
+                        etat: { $in: ['en attente', 'validé'] }
+                    }
+                ]
+            };
+        else if (req.user.role.libelle == "mecanicien")
+            query = { etat: { $in: ['en attente', 'validé'] } };
 
         const rendezVousList = await RendezVous.find(query)
             .populate('client')
@@ -105,11 +104,11 @@ exports.getAllRendezVous = async (req, res) => {
                     { path: 'mecanicien', model: 'Personne' }
                 ]
             })
+            .populate('validateur')
             .populate({
                 path: 'piecesAchetees.piece',
                 model: 'Piece'
             })
-            .populate('piecesAchetees.piece')
             .sort({ dateHeureDemande: -1 });
         res.json(rendezVousList);
     } catch (error) {
@@ -123,6 +122,7 @@ exports.getRendezVousById = async (req, res) => {
         const rendezVous = await RendezVous.findById(req.params.id)
             .populate('client')
             .populate('voiture')
+            .populate('validateur')
             .populate('services.sousSpecialite')
             .populate('services.mecanicien')
             .populate('piecesAchetees.piece')
@@ -147,12 +147,13 @@ exports.updateRendezVous = async (req, res) => {
         )
             .populate('client')
             .populate('voiture')
+            .populate('validateur')
             .populate('services.sousSpecialite')
             .populate('services.mecanicien')
             .populate('piecesAchetees.piece');
 
         if (!rendezVous) {
-            return res.status(404).json({ message: 'RendezVous not found' });
+            return res.status(404).json({ message: 'Rendez-vous not found' });
         }
 
         res.json(rendezVous);
@@ -227,6 +228,7 @@ async function getRendezVous(query, res) {
                     { path: 'mecanicien', model: 'Personne' }
                 ]
             })
+            .populate('validateur')
             .populate({
                 path: 'piecesAchetees.piece',
                 model: 'Piece'
@@ -243,15 +245,15 @@ async function getRendezVous(query, res) {
 exports.getListRendezVousByEtat = async (req, res) => {
     try {
         var query = {};
-        if(req.user.role.libelle == "client")
-            query = {client : req.user.idPersonne};
+        if (req.user.role.libelle == "client")
+            query = { client: req.user.idPersonne };
 
         const etat = req.params.etat;
         const etatsValides = ['en attente', 'validé', 'rejeté', 'annulé'];
         if (!etatsValides.includes(etat)) {
             return res.status(400).json({ message: "État de rendez-vous invalide." });
         }
-        query.etat = etat ;
+        query.etat = etat;
         await getRendezVous(query, res); // Utiliser la fonction utilitaire
 
     } catch (error) {
@@ -263,13 +265,16 @@ exports.getListRendezVousByEtat = async (req, res) => {
 // prendre rendezVous par client
 exports.getListRendezVousByClient = async (req, res) => {
     try {
-        const clientId = req.params.clientId;
+        const clientId = req.user.idPersonne;
+        var query = {};
+        if (req.user.role.libelle == "client")
+            query = { client: clientId }
 
         if (!mongoose.Types.ObjectId.isValid(clientId)) {
             return res.status(400).json({ message: "ID de client invalide." });
         }
 
-        await getRendezVous({ client: clientId }, res); // Utiliser la fonction utilitaire
+        await getRendezVous(query, res); // Utiliser la fonction utilitaire
 
     } catch (error) {
         console.error(error);
@@ -296,15 +301,15 @@ exports.getListRendezVousByMecanicien = async (req, res) => {
 
 exports.modifierRendezVous = async (req, res) => {
     try {
-        const rendezVousId = req.params.rendezVousId;
+        const rendezVousId = req.params.id;
         const actions = req.body.actions;
 
         if (!mongoose.Types.ObjectId.isValid(rendezVousId)) {
-            return res.status(400).json({ message: "ID de rendez-vous invalide." });
+            throw new Error("ID de rendez-vous invalide.");
         }
 
         if (!Array.isArray(actions)) {
-            return res.status(400).json({ message: "Les actions doivent être un tableau." });
+            throw new Error("Les actions doivent être un tableau.");
         }
 
         let updates = {};
@@ -312,7 +317,7 @@ exports.modifierRendezVous = async (req, res) => {
 
         for (const actionObj of actions) {
             const action = actionObj.action;
-            const { validateurId, nouveauMecanicienId, raisonRejet } = actionObj;
+            const { nouveauMecanicienId, commentaire, services } = actionObj;
 
             const actionsValides = ['validé', 'rejeté', 'assignerMecanicien'];
 
@@ -322,20 +327,28 @@ exports.modifierRendezVous = async (req, res) => {
 
             switch (action) {
                 case 'validé':
-                    if (!mongoose.Types.ObjectId.isValid(validateurId)) {
-                        return res.status(400).json({ message: "ID de validateur invalide." });
+                    if (!services) {
+                        throw new Error("L'assignation d'au moins un mécanicien est obligatoire pour poursuivre.");
                     }
+
+                    for (const service of services) {
+                        service.mecanicien = service.mecanicien.personne._id;
+                    }
+
                     updates.etat = 'validé';
-                    updates.validateur = validateurId;
+                    updates.validateur = req.user.idPersonne;
+                    updates.remarque = commentaire;
+                    updates.services = services;
                     hasUpdates = true;
                     break;
 
                 case 'rejeté':
-                    if (!raisonRejet) {
-                        return res.status(400).json({ message: "La raison du rejet est obligatoire." });
+                    if (!commentaire) {
+                        throw new Error("La raison du rejet est obligatoire.");
                     }
                     updates.etat = 'rejeté';
-                    updates.raisonRejet = raisonRejet;
+                    updates.validateur = req.user.idPersonne;
+                    updates.remarque = commentaire;
                     hasUpdates = true;
                     break;
 
@@ -352,28 +365,20 @@ exports.modifierRendezVous = async (req, res) => {
         // Mettre à jour le rendez-vous (seulement s'il y a des mises à jour)
         let rendezVousMisAJour;
         if (hasUpdates) {
-            rendezVousMisAJour = await populateRendezVous(RendezVous.findByIdAndUpdate(
+            rendezVousMisAJour = await RendezVous.findByIdAndUpdate(
                 rendezVousId,
                 updates,
                 { new: true }
-            ));
-
-
-            if (!rendezVousMisAJour) {
-                return res.status(404).json({ message: "Rendez-vous non trouvé." });
-            }
-        } else {
-            rendezVousMisAJour = await populateRendezVous(RendezVous.findById(rendezVousId));
-
+            );
 
             if (!rendezVousMisAJour) {
-                return res.status(404).json({ message: "Rendez-vous non trouvé." });
+                throw new Error("Rendez-vous non trouvé.");
             }
         }
-        res.status(200).json(rendezVousMisAJour);
+        await getRendezVous({ _id: rendezVousId }, res);
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Erreur serveur lors de la modification du rendez-vous." });
+        res.status(500).json({ message: error.message });
     }
-};
+}; 
