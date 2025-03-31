@@ -247,13 +247,13 @@ exports.getListRendezVousByClient = async (req, res) => {
 // prendre rendezVous par mecanicien
 exports.getListRendezVousByMecanicien = async (req, res) => {
     try {
-        const mecanicienId = req.params.mecanicienId;
+        const mecanicienId = req.user.idPersonne;
 
         if (!mongoose.Types.ObjectId.isValid(mecanicienId)) {
             return res.status(400).json({ message: "ID de mécanicien invalide." });
         }
 
-        await getRendezVous({ "services.mecanicien": mecanicienId }, res); // Utiliser la fonction utilitaire
+        await getRendezVous({ "services.mecanicien": mecanicienId }, res);
 
     } catch (error) {
         console.error(error);
