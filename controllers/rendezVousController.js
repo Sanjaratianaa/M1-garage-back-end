@@ -162,44 +162,6 @@ exports.updateRendezVous = async (req, res) => {
     }
 };
 
-async function populateRendezVous(query) {
-    return query
-        .populate({
-            path: 'client',
-            populate: {
-                path: 'personne',
-                model: 'Personne'
-            }
-        })
-        .populate({
-            path: 'voiture',
-            populate: [
-                { path: 'marque' },
-                { path: 'modele' },
-                { path: 'categorie' },
-                { path: 'typeTransmission' }
-            ]
-        })
-        .populate({
-            path: 'services',
-            populate: [
-                {
-                    path: 'sousSpecialite',
-                    model: 'SousService',
-                    populate: {
-                        path: 'service',
-                        model: 'Service'
-                    }
-                },
-                { path: 'mecanicien', model: 'Personne' }
-            ]
-        })
-        .populate({
-            path: 'piecesAchetees.piece',
-            model: 'Piece'
-        });
-}
-
 // function globale
 async function getRendezVous(query, res) {
     try {

@@ -99,7 +99,7 @@ const RendezVousSchema = new mongoose.Schema({
     },
     etat: { 
         type: String, 
-        enum: ['en attente', 'validé', 'rejeté', 'annulé'], 
+        enum: ['en attente', 'validé', 'rejeté', 'annulé', 'terminé'], 
         default: 'en attente'
     }
 }, { timestamps: true });
