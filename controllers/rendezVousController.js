@@ -121,12 +121,34 @@ exports.getRendezVousById = async (req, res) => {
     try {
         const rendezVous = await RendezVous.findById(req.params.id)
             .populate('client')
-            .populate('voiture')
+            .populate({
+                path: 'voiture',
+                populate: [
+                    { path: 'marque' },
+                    { path: 'modele' },
+                    { path: 'categorie' },
+                    { path: 'typeTransmission' }
+                ]
+            })
+            .populate({
+                path: 'services',
+                populate: [
+                    {
+                        path: 'sousSpecialite',
+                        model: 'SousService',
+                        populate: {
+                            path: 'service',
+                            model: 'Service'
+                        }
+                    },
+                    { path: 'mecanicien', model: 'Personne' }
+                ]
+            })
             .populate('validateur')
-            .populate('services.sousSpecialite')
-            .populate('services.mecanicien')
-            .populate('piecesAchetees.piece')
-            ;
+            .populate({
+                path: 'piecesAchetees.piece',
+                model: 'Piece'
+            });
         if (!rendezVous) {
             return res.status(404).json({ message: 'RendezVous not found' });
         }
