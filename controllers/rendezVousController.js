@@ -327,13 +327,22 @@ exports.modifierRendezVous = async (req, res) => {
             const action = actionObj.action;
             const { nouveauMecanicienId, commentaire, services } = actionObj;
 
-            const actionsValides = ['validé', 'rejeté', 'assignerMecanicien'];
+            const actionsValides = ['validé', 'rejeté', 'assignerMecanicien', 'annulé'];
 
             if (!actionsValides.includes(action)) {
                 return res.status(400).json({ message: `Action invalide : ${action}.` });
             }
 
             switch (action) {
+                case 'annulé':
+                    if (!commentaire) {
+                        throw new Error("La raison de l'annulation est obligatoire.");
+                    }
+                    updates.etat = 'annulé';
+                    updates.remarque = commentaire;
+                    hasUpdates = true;
+                    break;
+
                 case 'validé':
                     const rendezVous = await RendezVous.findById(rendezVousId);
                     const today = new Date();
@@ -351,7 +360,7 @@ exports.modifierRendezVous = async (req, res) => {
                     }).format(new Date(dateToCheck));
 
                     if (dateToCheck < today)
-                        throw new Error(`La demande de rendez-vous n'est plus valide, car la date et l'heure (${formattedDate}) demandées sont déjà passées.`);
+                        throw new Error(`La demande de  rendez-vous n'est plus valide, car la date et l'heure (${formattedDate}) demandées sont déjà passées.`);
 
                     if (!services) {
                         throw new Error("L'assignation d'au moins un mécanicien est obligatoire pour poursuivre.");
