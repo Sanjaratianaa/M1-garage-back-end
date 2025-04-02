@@ -77,6 +77,8 @@ exports.getAllVoituresByClient = async (req, res) => {
         var query = {};
         if(req.user.role.libelle == "client")
             query = {client : req.user.id};
+        else 
+            query = {etat: "Active"};
         const voitures = await Voiture.find(query)
             .populate({
                 path: 'client',  // Peupler le client
