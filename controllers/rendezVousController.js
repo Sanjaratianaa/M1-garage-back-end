@@ -76,7 +76,8 @@ exports.getAllRendezVous = async (req, res) => {
                     }
                 ]
             };
-        else if (req.user.role.libelle == "mecanicien")
+
+        else if (req.user.role.libelle == "mécanicien")
             query = { etat: { $in: ['en attente', 'validé'] } };
 
         const rendezVousList = await RendezVous.find(query)
@@ -168,11 +169,34 @@ exports.updateRendezVous = async (req, res) => {
             { new: true }
         )
             .populate('client')
-            .populate('voiture')
+            .populate({
+                path: 'voiture',
+                populate: [
+                    { path: 'marque' },
+                    { path: 'modele' },
+                    { path: 'categorie' },
+                    { path: 'typeTransmission' }
+                ]
+            })
+            .populate({
+                path: 'services',
+                populate: [
+                    {
+                        path: 'sousSpecialite',
+                        model: 'SousService',
+                        populate: {
+                            path: 'service',
+                            model: 'Service'
+                        }
+                    },
+                    { path: 'mecanicien', model: 'Personne' }
+                ]
+            })
             .populate('validateur')
-            .populate('services.sousSpecialite')
-            .populate('services.mecanicien')
-            .populate('piecesAchetees.piece');
+            .populate({
+                path: 'piecesAchetees.piece',
+                model: 'Piece'
+            });
 
         if (!rendezVous) {
             return res.status(404).json({ message: 'Rendez-vous not found' });
@@ -311,6 +335,24 @@ exports.modifierRendezVous = async (req, res) => {
 
             switch (action) {
                 case 'validé':
+                    const rendezVous = await RendezVous.findById(rendezVousId);
+                    const today = new Date();
+                    const dateToCheck = rendezVous.dateRendezVous; // Conversion en Date
+
+                    console.log(dateToCheck + " < ? " + today);
+
+                    const formattedDate = new Intl.DateTimeFormat('fr-FR', { 
+                        weekday: 'long', 
+                        day: '2-digit', 
+                        month: 'long', 
+                        year: 'numeric', 
+                        hour: '2-digit', 
+                        minute: '2-digit', 
+                    }).format(new Date(dateToCheck));
+
+                    if (dateToCheck < today)
+                        throw new Error(`La demande de rendez-vous n'est plus valide, car la date et l'heure (${formattedDate}) demandées sont déjà passées.`);
+
                     if (!services) {
                         throw new Error("L'assignation d'au moins un mécanicien est obligatoire pour poursuivre.");
                     }
