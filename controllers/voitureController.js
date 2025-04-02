@@ -1,3 +1,4 @@
+const { query } = require('express');
 const Voiture = require('../models/Voiture');
 
 // Create a new Voiture
@@ -34,7 +35,9 @@ exports.createVoiture = async (req, res) => {
             .populate('marque')
             .populate('modele')
             .populate('categorie')
-            .populate('typeTransmission');        
+            .populate('typeTransmission');   
+        
+        console.log(voiture);
 
         res.status(201).json(voiture);
     } catch (error) {
@@ -71,7 +74,12 @@ exports.getAllVoitures = async (req, res) => {
 
 exports.getAllVoituresByClient = async (req, res) => {
     try {
-        const voitures = await Voiture.find({client : req.user.id})
+        var query = {};
+        if(req.user.role.libelle == "client")
+            query = {client : req.user.id};
+        else 
+            query = {etat: "Active"};
+        const voitures = await Voiture.find(query)
             .populate({
                 path: 'client',  // Peupler le client
                 populate: {

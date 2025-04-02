@@ -2,7 +2,6 @@ const AuthenticationService = require('../../services/authentification.service')
 
 const AuthenticationController = {
     login: async (req, res) => {
-        console.log(req.body);
         const {email, password} = req.body;
 
         const result = await AuthenticationService.authenticateUser(email, password);
@@ -28,7 +27,6 @@ const AuthenticationController = {
         const token = req.body.token;
 
         const result = AuthenticationService.verifyToken(token);
-        console.log(result);
 
         if (result.success) {
             res.status(201).json({success: true, user: result.user});

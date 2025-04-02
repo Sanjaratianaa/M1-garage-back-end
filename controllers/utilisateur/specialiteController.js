@@ -262,3 +262,35 @@ exports.deleteSpecialite = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// Get all Specialites Actives by sousService
+exports.getAllSpecialitesActivesBySousService = async (req, res) => {
+    try {
+
+        const specialites = await Specialite.find({ etat: "Active", sousService: req.params.idSousService })
+            .populate({
+                path: 'sousService',  // Peupler le sousService
+                populate: {
+                    path: 'service',  // Peupler la personne
+                    model: 'Service'  // Spécifie le modèle à peupler
+                }
+            })
+            .populate({
+                path: 'mecanicien',  // Peupler le mecanicien
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            })
+            .populate({
+                path: 'manager',  // Peupler le manager
+                populate: {
+                    path: 'personne',  // Peupler la personne
+                    model: 'Personne'  // Spécifie le modèle à peupler
+                }
+            });
+        res.json(specialites);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};

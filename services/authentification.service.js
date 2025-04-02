@@ -14,7 +14,7 @@ const AuthenticationService = {
             const personne = await Personne.findOne({ email: email, etat: 'Active' });
 
             if (!personne) {
-                return { success: false, message: 'Invalid credentials' };
+                return { success: false, message: 'Email ou mot de passe incorrect' };
             }
 
             const user = await Utilisateur.findOne({ personne: personne._id })
@@ -22,13 +22,13 @@ const AuthenticationService = {
                 .populate('idRole');
 
             if (!user) {
-                return { success: false, message: 'Invalid credentials' };
+                return { success: false, message: 'Email ou mot de passe incorrect' };
             }
 
             const passwordMatch = await bcrypt.compare(password, user.motDePasse);
 
             if (!passwordMatch) {
-                return { success: false, message: 'Invalid credentials' };
+                return { success: false, message: 'Email ou mot de passe incorrect' };
             }
 
             const payload = {
@@ -123,10 +123,6 @@ const AuthenticationService = {
 
             await RoleController.getRoleBy(mockReq, mockRes);
 
-            console.log("starting here: >>>>>>>>>>>> ");
-            console.log(mockRes);
-            console.log("starting here: >>>>>>>>>>>> " + JSON.stringify(mockRes));
-
             if (mockRes.statusCode !== 200) {
             throw new Error(`Role retrieval failed: ${mockRes.statusCode}: ${mockRes.data?.message || 'Unknown error'}`);
             }
@@ -149,9 +145,6 @@ const AuthenticationService = {
             const utilisateur = utilisateurResponse.data;
 
             const matricule = utilisateur.matricule;
-
-            console.log("motDePasse:", motDePasse);
-            console.log("matricule:", matricule);
 
             // for employe only
             const finalMotDePasse = !motDePasse ? matricule : motDePasse;

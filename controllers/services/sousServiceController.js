@@ -9,7 +9,7 @@ exports.createSousService = async (req, res) => {
             manager: req.user.id,
         };
 
-        if(req.body.duree < 0)
+        if (req.body.duree < 0)
             throw new Error("Durée invalide. La durée doit etre supérieur à 0mn");
 
         const sousServiceSave = new SousService(sousServiceData);
@@ -23,9 +23,9 @@ exports.createSousService = async (req, res) => {
                     model: 'Personne'  // Spécifie le modèle à peupler
                 }
             })
-            .lean(); 
+            .lean();
         sousService.prixUnitaire = 0;
-        
+
         res.status(201).json(sousService);
     } catch (error) {
         console.error(error);
@@ -67,9 +67,9 @@ exports.getAllSousServices = async (req, res) => {
                 sousService: sousService._id,
                 date: { $lte: today } // Date d'application inférieure ou égale à aujourd'hui
             })
-            .sort({ date: -1, dateEnregistrement: -1 }) // Trier par date DESC puis dateEnregistrement DESC
-            .limit(1)
-            .lean();
+                .sort({ date: -1, dateEnregistrement: -1 }) // Trier par date DESC puis dateEnregistrement DESC
+                .limit(1)
+                .lean();
 
             sousService.prixUnitaire = prix ? prix.prixUnitaire : 0; // Ajouter le prix s'il existe
         }
@@ -85,15 +85,38 @@ exports.getAllSousServices = async (req, res) => {
 // Get all SousServices Actives
 exports.getAllSousServicesActives = async (req, res) => {
     try {
+        const today = new Date(); // Date du jour
         const sousServices = await SousService.find({ etat: "Active" })
             .populate('service')
             .populate({
-                path: 'manager',  // Peupler le manager
+                path: 'manager',
                 populate: {
-                    path: 'personne',  // Peupler la personne
-                    model: 'Personne'  // Spécifie le modèle à peupler
+                    path: 'personne',
+                    model: 'Personne'
                 }
-            });
+            })
+            .populate({
+                path: 'managerSuppression',
+                populate: {
+                    path: 'personne',
+                    model: 'Personne'
+                }
+            })
+            .lean(); // Convertit en objets JS purs pour modification
+
+        // Récupérer le prix le plus récent pour chaque sous-service
+        for (let sousService of sousServices) {
+            const prix = await PrixSousService.findOne({
+                sousService: sousService._id,
+                date: { $lte: today } // Date d'application inférieure ou égale à aujourd'hui
+            })
+                .sort({ date: -1, dateEnregistrement: -1 }) // Trier par date DESC puis dateEnregistrement DESC
+                .limit(1)
+                .lean();
+
+            sousService.prixUnitaire = prix ? prix.prixUnitaire : 0; // Ajouter le prix s'il existe
+        }
+
         res.json(sousServices);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -138,17 +161,17 @@ exports.updateSousService = async (req, res) => {
             req.body,
             { new: true }
         )
-        .populate('service')
-        .populate('manager')
-        .populate('managerSuppression')
-        .lean();
+            .populate('service')
+            .populate('manager')
+            .populate('managerSuppression')
+            .lean();
 
         const prix = await PrixSousService.findOne({
             sousService: sousService._id,
             date: { $lte: today } // Date d'application inférieure ou égale à aujourd'hui
         })
-        .sort({ date: -1, dateEnregistrement: -1 }) // Trier par date DESC puis dateEnregistrement DESC
-        .lean();
+            .sort({ date: -1, dateEnregistrement: -1 }) // Trier par date DESC puis dateEnregistrement DESC
+            .lean();
 
         sousService.prixUnitaire = prix ? prix.prixUnitaire : 0; // Ajouter le prix s'il existe
 

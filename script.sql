@@ -135,3 +135,5 @@ db.counters.insertOne({ _id: "matricule_client", seq: 0 })
   "mecanicien": "67e45508c4546a2b066d5d0a",
   "dateRendezVous": "2025-04-08T08:00:00.000Z"
 }
+
+mongo "mongodb+srv://layah:layah@garage.sl8qr.mongodb.net/garageDB?retryWrites=true&w=majority"
