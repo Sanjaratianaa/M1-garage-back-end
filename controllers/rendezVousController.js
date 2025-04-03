@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const RendezVous = require("../models/RendezVous");
+const PrixPieceController = require('./prix/prixPieceController'); 
+const {getResteStock} = require("./stock/gestionStockController");
 
 // Create a new RendezVous
 exports.createRendezVous = async (req, res) => {
@@ -57,10 +59,6 @@ exports.createRendezVous = async (req, res) => {
                     { path: "mecanicien", model: "Personne" },
                 ],
             })
-            .populate({
-                path: "piecesAchetees.piece",
-                model: "Piece",
-            })
             .sort({ dateHeureDemande: -1 });
 
         console.log(rendezVous);
@@ -115,10 +113,11 @@ exports.getAllRendezVous = async (req, res) => {
             })
             .populate("validateur")
             .populate({
-                path: "piecesAchetees.piece",
-                model: "Piece",
+                path: "piecesAchetees",
+                populate: ["piece", "marqueVoiture", "modeleVoiture", "typeTransmission"],
             })
-            .sort({ dateHeureDemande: -1 });
+            .sort({ dateHeureDemande: -1 })
+            .lean();
         res.json(rendezVousList);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -155,8 +154,8 @@ exports.getRendezVousById = async (req, res) => {
             })
             .populate('validateur')
             .populate({
-                path: 'piecesAchetees.piece',
-                model: 'Piece'
+                path: "piecesAchetees",
+                populate: ["piece", "marqueVoiture", "modeleVoiture", "typeTransmission"],
             });
         if (!rendezVous) {
             return res.status(404).json({ message: "RendezVous not found" });
@@ -169,53 +168,102 @@ exports.getRendezVousById = async (req, res) => {
 };
 
 // Update a RendezVous
+// exports.updateRendezVous = async (req, res) => {
+//     try {
+//         const { id } = req.params;
+//         const updateData = req.body;
+
+//         const rendezVous = await RendezVous.findById(id);
+
+//         if (!rendezVous) {
+//             return res.status(404).json({ message: 'Rendez-vous not found' });
+//         }
+
+//         const topLevelFields = ['client', 'voiture', 'dateHeureDemande', 'dateRendezVous', 'heureDebut', 'heureFin', 'remarque', 'validateur', 'etat'];
+
+//         for (const key of topLevelFields) {
+//             if (updateData.hasOwnProperty(key)) {
+//                 rendezVous.set(key, updateData[key]);
+//             }
+//         }
+
+//         if (updateData.services && Array.isArray(updateData.services)) {
+//             updateData.services.forEach(serviceUpdate => {
+//                 if (serviceUpdate._id) {
+//                     const serviceToUpdate = rendezVous.services.id(serviceUpdate._id);
+//                     if (serviceToUpdate) {
+//                         Object.assign(serviceToUpdate, serviceUpdate);
+//                         console.log(`Updated service with _id: ${serviceUpdate._id}`);
+//                     } else {
+//                         console.warn(`Service with _id ${serviceUpdate._id} provided but not found in RendezVous ${id}. Skipping update for this item.`);
+//                     }
+//                 } else {
+//                     rendezVous.services.push(serviceUpdate);
+//                     console.log('Added new service:', serviceUpdate);
+//                 }
+//             });
+//         }
+
+//         if (updateData.addPiecesAchetees && Array.isArray(updateData.addPiecesAchetees)) {
+//             const piecesToAdd = updateData.addPiecesAchetees.filter(p => typeof p === 'object' && p !== null);
+//             if (piecesToAdd.length > 0) {
+//                 rendezVous.piecesAchetees.push(...piecesToAdd);
+//                 console.log(`Added ${piecesToAdd.length} items to piecesAchetees.`);
+//             }
+//         }
+
+//         const savedRendezVous = await rendezVous.save();
+
+//         const populatedRendezVous = await RendezVous.findById(savedRendezVous._id)
+//             .populate('client')
+//             .populate({
+//                 path: 'voiture',
+//                 populate: [
+//                     { path: 'marque' },
+//                     { path: 'modele' },
+//                     { path: 'categorie' },
+//                     { path: 'typeTransmission' }
+//                 ]
+//             })
+//             .populate({
+//                 path: 'services',
+//                 populate: [
+//                     {
+//                         path: 'sousSpecialite',
+//                         model: 'SousService',
+//                         populate: {
+//                             path: 'service',
+//                             model: 'Service'
+//                         }
+//                     },
+//                     { path: 'mecanicien', model: 'Personne' }
+//                 ]
+//             })
+//             .populate('validateur')
+//             .populate({
+//                 path: "piecesAchetees",
+//                 populate: ["piece", "marqueVoiture", "modeleVoiture", "typeTransmission"],
+//             });
+
+//         res.json(populatedRendezVous);
+
+//     } catch (error) {
+//         console.error("Error updating RendezVous:", error);
+//         if (error.name === 'ValidationError') {
+//              return res.status(400).json({ message: "Validation Error", errors: error.errors });
+//         }
+//         res.status(400).json({ message: error.message || "An error occurred during the update." });
+//     }
+// };
+
+// Update a RendezVous
 exports.updateRendezVous = async (req, res) => {
     try {
-        const { id } = req.params;
-        const updateData = req.body;
-
-        const rendezVous = await RendezVous.findById(id);
-
-        if (!rendezVous) {
-            return res.status(404).json({ message: 'Rendez-vous not found' });
-        }
-
-        const topLevelFields = ['client', 'voiture', 'dateHeureDemande', 'dateRendezVous', 'heureDebut', 'heureFin', 'remarque', 'validateur', 'etat'];
-
-        for (const key of topLevelFields) {
-            if (updateData.hasOwnProperty(key)) {
-                rendezVous.set(key, updateData[key]);
-            }
-        }
-
-        if (updateData.services && Array.isArray(updateData.services)) {
-            updateData.services.forEach(serviceUpdate => {
-                if (serviceUpdate._id) {
-                    const serviceToUpdate = rendezVous.services.id(serviceUpdate._id);
-                    if (serviceToUpdate) {
-                        Object.assign(serviceToUpdate, serviceUpdate);
-                        console.log(`Updated service with _id: ${serviceUpdate._id}`);
-                    } else {
-                        console.warn(`Service with _id ${serviceUpdate._id} provided but not found in RendezVous ${id}. Skipping update for this item.`);
-                    }
-                } else {
-                    rendezVous.services.push(serviceUpdate);
-                    console.log('Added new service:', serviceUpdate);
-                }
-            });
-        }
-
-        if (updateData.addPiecesAchetees && Array.isArray(updateData.addPiecesAchetees)) {
-            const piecesToAdd = updateData.addPiecesAchetees.filter(p => typeof p === 'object' && p !== null);
-            if (piecesToAdd.length > 0) {
-                rendezVous.piecesAchetees.push(...piecesToAdd);
-                console.log(`Added ${piecesToAdd.length} items to piecesAchetees.`);
-            }
-        }
-
-        const savedRendezVous = await rendezVous.save();
-
-        const populatedRendezVous = await RendezVous.findById(savedRendezVous._id)
+        const rendezVous = await RendezVous.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        )
             .populate('client')
             .populate({
                 path: 'voiture',
@@ -242,20 +290,20 @@ exports.updateRendezVous = async (req, res) => {
             })
             .populate('validateur')
             .populate({
-                path: 'piecesAchetees.piece',
-                model: 'Piece'
+                path: "piecesAchetees",
+                populate: ["piece", "marqueVoiture", "modeleVoiture", "typeTransmission"],
             });
 
-        res.json(populatedRendezVous);
-
-    } catch (error) {
-        console.error("Error updating RendezVous:", error);
-        if (error.name === 'ValidationError') {
-             return res.status(400).json({ message: "Validation Error", errors: error.errors });
+        if (!rendezVous) {
+            return res.status(404).json({ message: 'Rendez-vous not found' });
         }
-        res.status(400).json({ message: error.message || "An error occurred during the update." });
+
+        res.json(rendezVous);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
     }
 };
+
 
 // function globale
 async function getRendezVous(query, res) {
@@ -287,8 +335,8 @@ async function getRendezVous(query, res) {
             })
             .populate("validateur")
             .populate({
-                path: "piecesAchetees.piece",
-                model: "Piece",
+                path: "piecesAchetees",
+                populate: ["piece", "marqueVoiture", "modeleVoiture", "typeTransmission"],
             })
             .sort({ dateHeureDemande: -1 });
         res.status(200).json(rendezVous);
@@ -479,5 +527,70 @@ exports.modifierRendezVous = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: error.message });
+    }
+};
+
+// ajout d'un piece
+exports.addPieceRendezVous = async (req, res) => {
+    try {
+        const pieceData = {
+            ...req.body,
+        };
+
+        if (pieceData.quantite < 0)
+            throw new Error(`Quantité invalide. Le quantité doit etre superieur à zero.`);
+        
+        const reste = await getResteStock(pieceData.piece, pieceData.marquePiece, pieceData.marqueVoiture, pieceData.modeleVoiture, pieceData.typeTransmission);
+        console.log(reste);
+        if(Number(reste) < pieceData.sortie) {
+            throw new Error(`L'achat du piece ne peut pas etre effectué. Le reste en stocks est ${reste}.`);
+        }
+
+        const prix = await PrixPieceController.getPrixPiece(pieceData.piece, pieceData.marquePiece, pieceData.marqueVoiture, pieceData.modeleVoiture, pieceData.typeTransmissionl);
+
+        throw new Error(`L'achat du piece ne peut pas etre effectué. Le reste en stocks est ${reste}.`);
+
+        const rendezVous = await RendezVous.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        )
+            .populate('client')
+            .populate({
+                path: 'voiture',
+                populate: [
+                    { path: 'marque' },
+                    { path: 'modele' },
+                    { path: 'categorie' },
+                    { path: 'typeTransmission' }
+                ]
+            })
+            .populate({
+                path: 'services',
+                populate: [
+                    {
+                        path: 'sousSpecialite',
+                        model: 'SousService',
+                        populate: {
+                            path: 'service',
+                            model: 'Service'
+                        }
+                    },
+                    { path: 'mecanicien', model: 'Personne' }
+                ]
+            })
+            .populate('validateur')
+            .populate({
+                path: "piecesAchetees",
+                populate: ["piece", "marqueVoiture", "modeleVoiture", "typeTransmission"],
+            });
+
+        if (!rendezVous) {
+            return res.status(404).json({ message: 'Rendez-vous not found' });
+        }
+
+        res.json(rendezVous);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
     }
 };

@@ -198,3 +198,12 @@ async function getResteStock(piece, marquePiece, marqueVoiture = null, modeleVoi
     }
 }
 
+module.exports = {
+    createGestionStock: exports.createGestionStock,
+    getAllGestionStocks: exports.getAllGestionStocks,
+    getGestionStockById: exports.getGestionStockById,
+    updateGestionStock: exports.updateGestionStock,
+    deleteGestionStock: exports.deleteGestionStock,
+    getStocks: exports.getStocks,
+    getResteStock: getResteStock,  // Pas besoin de `exports.` ici car `getResteStock` est une fonction définie normalement
+};
