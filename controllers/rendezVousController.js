@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const RendezVous = require("../models/RendezVous");
 const PrixPieceController = require('./prix/prixPieceController'); 
+const GestionStock = require('../models/stock/GestionStock');
 const {getResteStock} = require("./stock/gestionStockController");
 
 // Create a new RendezVous
@@ -83,7 +84,7 @@ exports.getAllRendezVous = async (req, res) => {
                     },
                 ],
             };
-        else if (req.user.role.libelle == "mecanicien")
+        else if (req.user.role.libelle == "mécanicien")
             query = { etat: { $in: ["en attente", "validé"] } };
 
         const rendezVousList = await RendezVous.find(query)
@@ -541,18 +542,33 @@ exports.addPieceRendezVous = async (req, res) => {
             throw new Error(`Quantité invalide. Le quantité doit etre superieur à zero.`);
         
         const reste = await getResteStock(pieceData.piece, pieceData.marquePiece, pieceData.marqueVoiture, pieceData.modeleVoiture, pieceData.typeTransmission);
-        console.log(reste);
-        if(Number(reste) < pieceData.sortie) {
+        if(Number(reste) < pieceData.quantite) {
             throw new Error(`L'achat du piece ne peut pas etre effectué. Le reste en stocks est ${reste}.`);
         }
 
-        const prix = await PrixPieceController.getPrixPiece(pieceData.piece, pieceData.marquePiece, pieceData.marqueVoiture, pieceData.modeleVoiture, pieceData.typeTransmissionl);
+        const prix = await PrixPieceController.getPrixPiece(pieceData.piece, pieceData.marquePiece, pieceData.marqueVoiture, pieceData.modeleVoiture, pieceData.typeTransmission);
 
-        throw new Error(`L'achat du piece ne peut pas etre effectué. Le reste en stocks est ${reste}.`);
+        pieceData.prixUnitaire = prix;
+        pieceData.prixTotal = prix * pieceData.quantite;
+
+        console.log(pieceData);
+
+        const _rendezVous = await RendezVous.findById(req.params.id);
+
+        if(_rendezVous.piecesAchetees == null) 
+            _rendezVous.piecesAchetees = [];
+        _rendezVous.piecesAchetees.push(pieceData);
+
+        const gestionStockData = pieceData;
+        gestionStockData.sortie = pieceData.quantite;  
+        gestionStockData.manager = req.user.id;
+
+        const gestionStockSave = new GestionStock(gestionStockData);
+        await gestionStockSave.save();
 
         const rendezVous = await RendezVous.findByIdAndUpdate(
             req.params.id,
-            req.body,
+            _rendezVous,
             { new: true }
         )
             .populate('client')
