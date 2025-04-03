@@ -1,105 +1,129 @@
 const mongoose = require('mongoose');
 
 const RendezVousSchema = new mongoose.Schema({
-    client: { 
-        type: mongoose.Schema.Types.ObjectId, 
+    client: {
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Personne'
     },
-    voiture: { 
-        type: mongoose.Schema.Types.ObjectId, 
+    voiture: {
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Voiture'
     },
     services: [
         {
-            sousSpecialite: { 
-                type: mongoose.Schema.Types.ObjectId, 
-                ref: 'SousService', 
+            sousSpecialite: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'SousService',
             },
-            raison: { 
-                type: String, 
+            raison: {
+                type: String,
             },
-            mecanicien: { 
-                type: mongoose.Schema.Types.ObjectId, 
-                ref: 'Personne', 
+            mecanicien: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Personne',
             },
-            quantiteEstimee: { 
-                type: Number, 
+            quantiteEstimee: {
+                type: Number,
             },
-            heureDebut: { 
-                type: Date, 
+            heureDebut: {
+                type: Date,
             },
-            heureFin: { 
-                type: Date, 
+            heureFin: {
+                type: Date,
             },
-            quantiteFinale: { 
-                type: Number, 
+            quantiteFinale: {
+                type: Number,
             },
-            prixUnitaire: { 
-                type: Number, 
+            prixUnitaire: {
+                type: Number,
             },
-            prixTotal: { 
-                type: Number, 
+            prixTotal: {
+                type: Number,
             },
-            remise: { 
-                type: Number, 
+            remise: {
+                type: Number,
             },
-            commentaire: { 
-                type: String },
-            note: { 
-                type: Number },
-            avis: { 
-                type: String },
-            status: { 
-                type: String, 
-                enum: ['en cours', 'en attente', 'suspendue', 'terminé'], 
+            commentaire: {
+                type: String
+            },
+            note: {
+                type: Number
+            },
+            avis: {
+                type: String
+            },
+            status: {
+                type: String,
+                enum: ['en cours', 'en attente', 'suspendue', 'terminé'],
             }
         }
     ],
-    dateHeureDemande: { 
-        type: Date, 
+    dateHeureDemande: {
+        type: Date,
         default: Date.now
     },
-    dateRendezVous: { 
+    dateRendezVous: {
         type: Date
     },
-    heureDebut: { 
+    heureDebut: {
         type: Date
     },
-    heureFin: { 
+    heureFin: {
         type: Date
     },
     piecesAchetees: [
         {
-            piece: { 
-                type: mongoose.Schema.Types.ObjectId, 
-                ref: 'Piece', 
+            piece: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Piece',
+                required: true
             },
-            quantite: { 
-                type: Number, 
+            marquePiece: {
+                type: String,
+                required: false
             },
-            prixUnitaire: { 
-                type: Number, 
+            marqueVoiture: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Marque',
+                required: false
             },
-            prixTotal: { 
-                type: Number, 
+            modeleVoiture: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Modele',
+                required: false
             },
-            remise: { 
-                type: Number, 
+            typeTransmission: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'TypeTransmission',
+                required: false
             },
-            commentaire: { 
-                type: String }
+            quantite: {
+                type: Number,
+            },
+            prixUnitaire: {
+                type: Number,
+            },
+            prixTotal: {
+                type: Number,
+            },
+            remise: {
+                type: Number,
+            },
+            commentaire: {
+                type: String
+            }
         }
     ],
-    remarque: { 
-        type: String 
+    remarque: {
+        type: String
     },
-    validateur: { 
-        type: mongoose.Schema.Types.ObjectId, 
+    validateur: {
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Personne'
     },
-    etat: { 
-        type: String, 
-        enum: ['en attente', 'validé', 'rejeté', 'annulé', 'terminé'], 
+    etat: {
+        type: String,
+        enum: ['en attente', 'validé', 'rejeté', 'annulé', 'terminé'],
         default: 'en attente'
     }
 }, { timestamps: true });

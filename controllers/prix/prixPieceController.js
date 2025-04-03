@@ -174,14 +174,11 @@ exports.getPrixPiece = async function getPrixPiece(piece, marquePiece, marqueVoi
     } else
         query["typeTransmission"] = null;
 
-    console.log(query);
-
     // Effectuer la recherche dans la collection "prix"
     const prix = await PrixPiece.findOne(query)
         .sort({ date: -1, dateEnregistrement: -1 }) // Trier par date DESC puis dateEnregistrement DESC
         .limit(1)
         .lean(); // On utilise limit(1) pour n'obtenir qu'une seule ligne
 
-    console.log(prix);
     return prix ? prix.prixUnitaire : 0;
 }
