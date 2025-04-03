@@ -70,6 +70,72 @@ exports.createRendezVous = async (req, res) => {
     }
 };
 
+// Get all stat rendez-vous
+exports.getAllStatRendezVous = async (req, res) => {
+    try {
+        var query = {};
+        if (req.user.role.libelle == "mecanicien") {
+            const mechanicId = req.user.idPersonne;
+        
+            const startOfDay = new Date();
+            startOfDay.setHours(0, 0, 0, 0);
+        
+            const endOfDay = new Date(startOfDay);
+            endOfDay.setDate(startOfDay.getDate() + 1);
+        
+            query = {
+                services: {
+                    $elemMatch: {
+                        mecanicien: mechanicId
+                    }
+                },
+                etat: {
+                    $in: ["en attente", "validé"]
+                },
+                dateRendezVous: {
+                    $gte: startOfDay,
+                    $lt: endOfDay
+                }
+            };
+        }
+
+        const rendezVousList = await RendezVous.find(query)
+            .populate("client")
+            .populate({
+                path: "voiture",
+                populate: [
+                    { path: "marque" },
+                    { path: "modele" },
+                    { path: "categorie" },
+                    { path: "typeTransmission" },
+                ],
+            })
+            .populate({
+                path: "services",
+                populate: [
+                    {
+                        path: "sousSpecialite",
+                        model: "SousService",
+                        populate: {
+                            path: "service",
+                            model: "Service",
+                        },
+                    },
+                    { path: "mecanicien", model: "Personne" },
+                ],
+            })
+            .populate("validateur")
+            .populate({
+                path: "piecesAchetees.piece",
+                model: "Piece",
+            })
+            .sort({ dateHeureDemande: -1 });
+        res.json(rendezVousList);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // Get all RendezVous
 exports.getAllRendezVous = async (req, res) => {
     try {
