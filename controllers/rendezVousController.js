@@ -81,8 +81,9 @@ exports.getAllStatRendezVous = async (req, res) => {
         const endOfDay = new Date(startOfDay);
         endOfDay.setDate(startOfDay.getDate() + 1);
 
+        const etatsPossible = ['en attente', 'validé', 'rejeté', 'annulé', 'terminé'];
+
         if (req.user.role.libelle == "mécanicien" || req.user.role.libelle == "mecanicien") {
-        
             query = {
                 services: {
                     $elemMatch: { mecanicien: req.user.idPersonne }
@@ -93,6 +94,10 @@ exports.getAllStatRendezVous = async (req, res) => {
         } else if (req.user.role.libelle == "manager") {
             query = {
                 etat: { $in: ["en attente", "validé"]}
+            };
+        } else {
+            query = {
+                client: req.user.idPersonne
             };
         }
 
@@ -138,26 +143,27 @@ exports.getNumberStats = async (req, res) => {
         const etatsPossible = ['en attente', 'validé', 'rejeté', 'annulé', 'terminé'];
 
         let query = [];
+        const userIdObject = new mongoose.Types.ObjectId(req.user.idPersonne);
 
         if (req.user.role.libelle == "mécanicien" || req.user.role.libelle == "mecanicien") {
             query = [
-                { $match: { "services.mecanicien": req.user.idPersonne } },
+                { $match: { "services.mecanicien": userIdObject } },
                 { $group: { _id: "$etat", count: { $sum: 1 } } }
             ];
         } else if (req.user.role.libelle == "manager") {
-            query = [
-                { 
-                    $group: { _id: "$etat", count: { $sum: 1 } }
-                }
-            ];
+            query = [{ 
+                $group: { _id: "$etat", count: { $sum: 1 } }
+            }];
         } else {
             query = [
-                { $match: { "client": req.user.idPersonne } },
+                { $match: { client: userIdObject } },
                 { $group: { _id: "$etat", count: { $sum: 1 } } }
             ];
         }
 
         const etats = await RendezVous.aggregate(query);
+
+        console.log(etats);
 
         // Set missing states to 0 count
         const result = etatsPossible.map(etat => {
