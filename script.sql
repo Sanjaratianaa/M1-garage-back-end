@@ -137,3 +137,18 @@ db.counters.insertOne({ _id: "matricule_client", seq: 0 })
 }
 
 mongo "mongodb+srv://layah:layah@garage.sl8qr.mongodb.net/garageDB?retryWrites=true&w=majority"
+
+const today = new Date();
+today.setHours(0, 0, 0, 0); // Pour avoir minuit
+
+const tomorrow = new Date(today);
+tomorrow.setDate(tomorrow.getDate() + 1); // exclusif pour la dateFin >= today
+
+const promo = await Promotion.findOne({
+  sousService: ObjectId("67e256a9811b3e52c586a96a"), // <-- ton ID ici
+  etat: "Active",
+  dateDebut: { $lte: today },
+  dateFin: { $gte: today }
+})
+.sort({ dateEnregistrement: -1 }) // la plus récente
+.exec();

@@ -1,5 +1,6 @@
 const SousService = require('../../models/services/SousService');
 const PrixSousService = require('../../models/prix/PrixSousService');
+const PromotionController = require('../promotionController');
 
 // Create a new SousService
 exports.createSousService = async (req, res) => {
@@ -25,6 +26,7 @@ exports.createSousService = async (req, res) => {
             })
             .lean();
         sousService.prixUnitaire = 0;
+        sousService.remise = 0;
 
         res.status(201).json(sousService);
     } catch (error) {
@@ -71,7 +73,9 @@ exports.getAllSousServices = async (req, res) => {
                 .limit(1)
                 .lean();
 
+            const remise = await PromotionController.getPromotionDuJour(sousService._id);
             sousService.prixUnitaire = prix ? prix.prixUnitaire : 0; // Ajouter le prix s'il existe
+            sousService.remise = remise; 
         }
 
         res.json(sousServices);
@@ -114,7 +118,10 @@ exports.getAllSousServicesActives = async (req, res) => {
                 .limit(1)
                 .lean();
 
+            const remise = await PromotionController.getPromotionDuJour(sousService._id);
+
             sousService.prixUnitaire = prix ? prix.prixUnitaire : 0; // Ajouter le prix s'il existe
+            sousService.remise = remise;
         }
 
         res.json(sousServices);
@@ -173,7 +180,10 @@ exports.updateSousService = async (req, res) => {
             .sort({ date: -1, dateEnregistrement: -1 }) // Trier par date DESC puis dateEnregistrement DESC
             .lean();
 
+        const remise = await PromotionController.getPromotionDuJour(sousService._id);
+
         sousService.prixUnitaire = prix ? prix.prixUnitaire : 0; // Ajouter le prix s'il existe
+        sousService.remise = remise;
 
         if (!sousService) {
             return res.status(404).json({ message: 'SousService not found' });

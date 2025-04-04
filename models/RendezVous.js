@@ -42,6 +42,7 @@ const RendezVousSchema = new mongoose.Schema({
             },
             remise: {
                 type: Number,
+                default: 0
             },
             commentaire: {
                 type: String
