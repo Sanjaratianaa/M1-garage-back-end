@@ -8,25 +8,19 @@ exports.createConge = async (req, res) => {
         data.mecanicien = req.user.idPersonne;
 
         const today = new Date();
-        const dateToCheck = new Date(data.dateConge); // Conversion en Date
+        const dateHeureDebut = new Date(data.dateHeureDebut); // Conversion en Date
+        const dateHeureFin = new Date(data.dateHeureFin); // Conversion en Date
 
-        console.log(dateToCheck + " < ? " + today);
+        console.log(dateHeureDebut + " < ? " + today);
 
-        if (dateToCheck < today)
-            throw new Error(
-                `Date et heure du congés invalide. La Date et heure du congés doit être supérieure ou égale à la date et heure du jour.`,
-            );
+        if (dateHeureDebut < today)
+            throw new Error(`La date et l'heure de début sont invalides. Elles doivent être postérieures ou égales à la date et l'heure actuelles.`);
 
-        if (
-            !data.client ||
-            !data.voiture ||
-            !data.services ||
-            !data.dateConge
-        ) {
-            throw new Error(
-                "Les champs client, voiture et date du Conge sont obligatoires.",
-            );
-        }
+        if (dateHeureFin < today)
+            throw new Error(`La date et l'heure de fin sont invalides. Elles doivent être postérieures ou égales à la date et l'heure actuelles.`);
+
+        if (dateHeureFin < dateHeureDebut)
+            throw new Error(`La date et l'heure de début sont invalides. Elles doivent être antérieures ou égales à la date et l'heure de fin.`);
 
         const congeSave = new Conge(data);
         congeSave.etat = "en attente";
