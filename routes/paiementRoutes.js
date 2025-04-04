@@ -3,6 +3,7 @@ const router = express.Router();
 const paiementController = require("../controllers/paiementController");
 
 router.post("/", paiementController.createPaiement);
+router.get("/paiementStat", paiementController.getPaiementsParMois);
 router.get("/", paiementController.getAllPaiements);
 router.get("/:id", paiementController.getPaiementById);
 router.put("/:id", paiementController.updatePaiement);

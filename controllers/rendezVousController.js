@@ -74,28 +74,25 @@ exports.createRendezVous = async (req, res) => {
 exports.getAllStatRendezVous = async (req, res) => {
     try {
         var query = {};
-        if (req.user.role.libelle == "mecanicien") {
-            const mechanicId = req.user.idPersonne;
-        
-            const startOfDay = new Date();
-            startOfDay.setHours(0, 0, 0, 0);
-        
-            const endOfDay = new Date(startOfDay);
-            endOfDay.setDate(startOfDay.getDate() + 1);
+
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+    
+        const endOfDay = new Date(startOfDay);
+        endOfDay.setDate(startOfDay.getDate() + 1);
+
+        if (req.user.role.libelle == "mécanicien" || req.user.role.libelle == "mecanicien") {
         
             query = {
                 services: {
-                    $elemMatch: {
-                        mecanicien: mechanicId
-                    }
+                    $elemMatch: { mecanicien: req.user.idPersonne }
                 },
-                etat: {
-                    $in: ["en attente", "validé"]
-                },
-                dateRendezVous: {
-                    $gte: startOfDay,
-                    $lt: endOfDay
-                }
+                etat: { $in: ["en attente", "validé"]},
+                dateRendezVous: { $lt: endOfDay }
+            };
+        } else if (req.user.role.libelle == "manager") {
+            query = {
+                etat: { $in: ["en attente", "validé"]}
             };
         }
 
@@ -136,6 +133,44 @@ exports.getAllStatRendezVous = async (req, res) => {
     }
 };
 
+exports.getNumberStats = async (req, res) => {
+    try {
+        const etatsPossible = ['en attente', 'validé', 'rejeté', 'annulé', 'terminé'];
+
+        let query = [];
+
+        if (req.user.role.libelle == "mécanicien" || req.user.role.libelle == "mecanicien") {
+            query = [
+                { $match: { "services.mecanicien": req.user.idPersonne } },
+                { $group: { _id: "$etat", count: { $sum: 1 } } }
+            ];
+        } else if (req.user.role.libelle == "manager") {
+            query = [
+                { 
+                    $group: { _id: "$etat", count: { $sum: 1 } }
+                }
+            ];
+        } else {
+            query = [
+                { $match: { "client": req.user.idPersonne } },
+                { $group: { _id: "$etat", count: { $sum: 1 } } }
+            ];
+        }
+
+        const etats = await RendezVous.aggregate(query);
+
+        // Set missing states to 0 count
+        const result = etatsPossible.map(etat => {
+            const foundEtat = etats.find(stat => stat._id === etat);
+            return { etat: etat, count: foundEtat ? foundEtat.count : 0 };
+        });
+
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 // Get all RendezVous
 exports.getAllRendezVous = async (req, res) => {
     try {
@@ -150,7 +185,7 @@ exports.getAllRendezVous = async (req, res) => {
                     },
                 ],
             };
-        else if (req.user.role.libelle == "mécanicien")
+        else if (req.user.role.libelle == "mécanicien" || req.user.role.libelle == "mecanicien")
             query = { etat: { $in: ["en attente", "validé"] } };
 
         const rendezVousList = await RendezVous.find(query)

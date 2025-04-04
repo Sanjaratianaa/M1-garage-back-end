@@ -5,6 +5,7 @@ const rendezVousController = require('../controllers/rendezVousController');
 router.get('/liste/parClient', rendezVousController.getListRendezVousByClient);
 router.get('/parMecanicien', rendezVousController.getListRendezVousByMecanicien);
 router.get('/statistique', rendezVousController.getAllStatRendezVous);
+router.get('/parNombreStat', rendezVousController.getNumberStats);
 router.get('/parEtat/:etat', rendezVousController.getListRendezVousByEtat);
 router.get('/:id', rendezVousController.getRendezVousById);
 router.get('/', rendezVousController.getAllRendezVous);
