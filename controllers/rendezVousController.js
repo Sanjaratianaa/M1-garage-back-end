@@ -282,93 +282,77 @@ exports.getRendezVousById = async (req, res) => {
 };
 
 // Update a RendezVous
-// exports.updateRendezVous = async (req, res) => {
-//     try {
-//         const { id } = req.params;
-//         const updateData = req.body;
+exports.updateServiceRendezVous = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updateData = req.body;
 
-//         const rendezVous = await RendezVous.findById(id);
+        const rendezVous = await RendezVous.findById(id);
 
-//         if (!rendezVous) {
-//             return res.status(404).json({ message: 'Rendez-vous not found' });
-//         }
+        if (!rendezVous) {
+            return res.status(404).json({ message: 'Rendez-vous not found' });
+        }
 
-//         const topLevelFields = ['client', 'voiture', 'dateHeureDemande', 'dateRendezVous', 'heureDebut', 'heureFin', 'remarque', 'validateur', 'etat'];
+        if (updateData.services && Array.isArray(updateData.services)) {
+            updateData.services.forEach(serviceUpdate => {
+                if (serviceUpdate._id) {
+                    const serviceToUpdate = rendezVous.services.id(serviceUpdate._id);
+                    if (serviceToUpdate) {
+                        Object.assign(serviceToUpdate, serviceUpdate);
+                        console.log(`Updated service with _id: ${serviceUpdate._id}`);
+                    } else {
+                        throw new Error(`Service with _id ${serviceUpdate._id} provided but not found in RendezVous ${id}. Skipping update for this item.`);
+                    }
+                } else {
+                    rendezVous.services.push(serviceUpdate);
+                    console.log('Added new service:', serviceUpdate);
+                }
+            });
+        }
 
-//         for (const key of topLevelFields) {
-//             if (updateData.hasOwnProperty(key)) {
-//                 rendezVous.set(key, updateData[key]);
-//             }
-//         }
+        const savedRendezVous = await rendezVous.save();
 
-//         if (updateData.services && Array.isArray(updateData.services)) {
-//             updateData.services.forEach(serviceUpdate => {
-//                 if (serviceUpdate._id) {
-//                     const serviceToUpdate = rendezVous.services.id(serviceUpdate._id);
-//                     if (serviceToUpdate) {
-//                         Object.assign(serviceToUpdate, serviceUpdate);
-//                         console.log(`Updated service with _id: ${serviceUpdate._id}`);
-//                     } else {
-//                         console.warn(`Service with _id ${serviceUpdate._id} provided but not found in RendezVous ${id}. Skipping update for this item.`);
-//                     }
-//                 } else {
-//                     rendezVous.services.push(serviceUpdate);
-//                     console.log('Added new service:', serviceUpdate);
-//                 }
-//             });
-//         }
+        const populatedRendezVous = await RendezVous.findById(savedRendezVous._id)
+            .populate('client')
+            .populate({
+                path: 'voiture',
+                populate: [
+                    { path: 'marque' },
+                    { path: 'modele' },
+                    { path: 'categorie' },
+                    { path: 'typeTransmission' }
+                ]
+            })
+            .populate({
+                path: 'services',
+                populate: [
+                    {
+                        path: 'sousSpecialite',
+                        model: 'SousService',
+                        populate: {
+                            path: 'service',
+                            model: 'Service'
+                        }
+                    },
+                    { path: 'mecanicien', model: 'Personne' }
+                ]
+            })
+            .populate('validateur')
+            .populate({
+                path: "piecesAchetees",
+                populate: ["piece", "marqueVoiture", "modeleVoiture", "typeTransmission"],
+            });
 
-//         if (updateData.addPiecesAchetees && Array.isArray(updateData.addPiecesAchetees)) {
-//             const piecesToAdd = updateData.addPiecesAchetees.filter(p => typeof p === 'object' && p !== null);
-//             if (piecesToAdd.length > 0) {
-//                 rendezVous.piecesAchetees.push(...piecesToAdd);
-//                 console.log(`Added ${piecesToAdd.length} items to piecesAchetees.`);
-//             }
-//         }
+        res.json(populatedRendezVous);
 
-//         const savedRendezVous = await rendezVous.save();
-
-//         const populatedRendezVous = await RendezVous.findById(savedRendezVous._id)
-//             .populate('client')
-//             .populate({
-//                 path: 'voiture',
-//                 populate: [
-//                     { path: 'marque' },
-//                     { path: 'modele' },
-//                     { path: 'categorie' },
-//                     { path: 'typeTransmission' }
-//                 ]
-//             })
-//             .populate({
-//                 path: 'services',
-//                 populate: [
-//                     {
-//                         path: 'sousSpecialite',
-//                         model: 'SousService',
-//                         populate: {
-//                             path: 'service',
-//                             model: 'Service'
-//                         }
-//                     },
-//                     { path: 'mecanicien', model: 'Personne' }
-//                 ]
-//             })
-//             .populate('validateur')
-//             .populate({
-//                 path: "piecesAchetees",
-//                 populate: ["piece", "marqueVoiture", "modeleVoiture", "typeTransmission"],
-//             });
-
-//         res.json(populatedRendezVous);
-
-//     } catch (error) {
-//         console.error("Error updating RendezVous:", error);
-//         if (error.name === 'ValidationError') {
-//              return res.status(400).json({ message: "Validation Error", errors: error.errors });
-//         }
-//         res.status(400).json({ message: error.message || "An error occurred during the update." });
-//     }
-// };
+    } catch (error) {
+        console.error("Error updating RendezVous:", error);
+        if (error.name === 'ValidationError') {
+             return res.status(400).json({ message: "Validation Error", errors: error.errors });
+        }
+        res.status(400).json({ message: error.message || "An error occurred during the update." });
+    }
+};
 
 // Update a RendezVous
 exports.updateRendezVous = async (req, res) => {

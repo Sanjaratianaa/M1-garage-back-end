@@ -32,10 +32,10 @@ const AuthenticationService = {
             }
 
             const payload = {
-                id: user._id,                 
+                id: user._id,
                 username: `${user.personne.nom} ${user.personne.prenom}`,
-                email: user.personne.email, 
-                matricule: user.matricule || null, 
+                email: user.personne.email,
+                matricule: user.matricule || null,
                 role: user.idRole,
                 idPersonne: user.personne._id
             };
@@ -80,16 +80,18 @@ const AuthenticationService = {
                 dateEmbauche
             } = req.body;
 
-            const personneReq = { body: {
-                nom,
-                prenom,
-                dateDeNaissance,
-                lieuDeNaissance,
-                genre,
-                etat,
-                numeroTelephone,
-                email
-            }};
+            const personneReq = {
+                body: {
+                    nom,
+                    prenom,
+                    dateDeNaissance,
+                    lieuDeNaissance,
+                    genre,
+                    etat,
+                    numeroTelephone,
+                    email
+                }
+            };
 
             const personneRes = {
                 status: (code) => {
@@ -108,7 +110,7 @@ const AuthenticationService = {
             }
 
             const personne = personneRes.data;
-            
+
             const mockReq = { body: { libelle: idRole } };
 
             const mockRes = {
@@ -124,7 +126,7 @@ const AuthenticationService = {
             await RoleController.getRoleBy(mockReq, mockRes);
 
             if (mockRes.statusCode !== 200) {
-            throw new Error(`Role retrieval failed: ${mockRes.statusCode}: ${mockRes.data?.message || 'Unknown error'}`);
+                throw new Error(`Role retrieval failed: ${mockRes.statusCode}: ${mockRes.data?.message || 'Unknown error'}`);
             }
 
             const roleResult = mockRes.data;
@@ -153,13 +155,13 @@ const AuthenticationService = {
 
             await utilisateur.save();
 
-            const populatedUser = await Utilisateur.findById(utilisateur._id).populate({path:'personne', model:'Personne'}).populate('idRole');
+            const populatedUser = await Utilisateur.findById(utilisateur._id).populate({ path: 'personne', model: 'Personne' }).populate('idRole');
 
             return { success: true, message: "User registered successfully", data: populatedUser };
         } catch (error) {
             console.error('Error registering user:', error);
 
-            if (personne && personne?._id) { 
+            if (personne && personne?._id) {
                 try {
                     const deletePersonneReq = { params: { id: personne._id } };
                     const deletePersonneRes = {};
@@ -176,32 +178,65 @@ const AuthenticationService = {
 
     changePassword: async (email, oldPassword, newPassword, confirmPassword) => {
         try {
-            const user = await Utilisateur.findOne({ 'personne.email': email }).populate('personne').populate('idRole');
+            // Exemple en Mongoose (Node.js)
+            const [user] = await Utilisateur.aggregate([
+                {
+                    $lookup: {
+                        from: 'personnes',           // nom de la collection "personnes"
+                        localField: 'personne',      // champ dans "utilisateurs"
+                        foreignField: '_id',         // champ correspondant dans "personnes"
+                        as: 'personne'
+                    }
+                },
+                { $unwind: '$personne' },
+
+                // Ajout de la jointure avec "roles"
+                {
+                    $lookup: {
+                        from: 'roles',               // nom de la collection "roles"
+                        localField: 'idRole',        // champ dans "utilisateurs"
+                        foreignField: '_id',         // champ correspondant dans "roles"
+                        as: 'role'
+                    }
+                },
+                { $unwind: '$role' },
+
+                // Filtrer par email de la personne
+                {
+                    $match: {
+                        'personne.email': email.trim()
+                    }
+                },
+                { $limit: 1 }
+            ]);
+
 
             if (!user) {
-                return { success: false, message: 'Invalid credentials' };
+                throw new Error("L'adresse e-mail est incorrecte ou n'existe pas.");
             }
-
-            const passwordMatch = await bcrypt.compare(oldPassword, user.motDePasse);
+            
+            const passwordMatch = await bcrypt.compare(oldPassword.trim(), user.motDePasse);
 
             if (!passwordMatch) {
-                return { success: false, message: 'Invalid credentials: Incorrect old password' };
+                throw new Error("Identifiants invalides : l'ancien mot de passe est incorrect.");
             }
 
             if (newPassword !== confirmPassword) {
-                return { success: false, message: 'New password and confirm password do not match' };
+                throw new Error("Les mots de passe ne correspondent pas.");
             }
-    
+
             // 4. Hash the new password
             const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-            user.motDePasse = hashedPassword;
-            await user.save();
+            await Utilisateur.updateOne(
+                { _id: user._id },
+                { $set: { motDePasse: hashedPassword } }
+            );
 
-            return { success: true, message: "Le mot de passe is successfully changed", data: user };
+            return { success: true, message: "Le mot de passe is successfully changed" };
         } catch (error) {
             console.error('Authentication error:', error);
-            return { success: false, message: 'Authentication failed' };
+            return { success: false, message: error.message };
         }
     }
 };
