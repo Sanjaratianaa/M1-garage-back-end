@@ -20,7 +20,7 @@ const sousServiceRoutes = require("./services/sousServiceRoutes");
 
 const manuelRoutes = require("./manuelRoutes");
 const promotionRoutes = require("./promotionRoutes");
-const demandeCongeRoutes = require("./demandeCongeRoutes");
+const congeRoutes = require("./congeRoutes");
 const voitureRoutes = require("./voitureRoutes");
 const rendezVousRoutes = require("./rendezVousRoutes");
 const gestionStockRoutes = require("./stock/gestionStockRoutes");
@@ -84,7 +84,7 @@ router.use("/sousServices", sousServiceRoutes);
 
 router.use("/manuels", manuelRoutes);
 router.use("/promotions", promotionRoutes);
-router.use("/conges", demandeCongeRoutes);
+router.use("/conges", congeRoutes);
 router.use("/voitures", voitureRoutes);
 router.use("/rendezVous", rendezVousRoutes);
 router.use("/stocks", gestionStockRoutes);

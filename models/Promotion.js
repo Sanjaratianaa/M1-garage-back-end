@@ -6,9 +6,9 @@ const PromotionSchema = new mongoose.Schema({
         ref: 'Utilisateur', 
         required: true 
     },
-    sousSpecialite: { 
+    sousService: { 
         type: mongoose.Schema.Types.ObjectId, 
-        ref: 'SousSpecialite', 
+        ref: 'SousService', 
         required: true 
     },
     dateDebut: { 
@@ -23,9 +23,14 @@ const PromotionSchema = new mongoose.Schema({
         type: Number, 
         required: true 
     }, // Pourcentage ou montant de la remise
+    dateEnregistrement: {
+        type: Date,
+        default: Date.now
+    },
     etat: { 
         type: String, 
-        required: true 
+        required: true ,
+        default: 'Active'
     } // Par exemple "actif", "inactif"
 }, { timestamps: true });
 

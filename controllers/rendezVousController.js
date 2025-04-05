@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const RendezVous = require("../models/RendezVous");
 const PrixPieceController = require('./prix/prixPieceController'); 
+const PromotionController = require('./promotionController');
 const GestionStock = require('../models/stock/GestionStock');
 const {getResteStock} = require("./stock/gestionStockController");
 
@@ -29,6 +30,11 @@ exports.createRendezVous = async (req, res) => {
             throw new Error(
                 "Les champs client, voiture et date du Rendez-vous sont obligatoires.",
             );
+        }
+
+        for(const service of data.services) {
+            const remise = await PromotionController.getPromotionDuJour(service.sousSpecialite, data.dateRendezVous);
+            service.remise = remise;
         }
 
         const rendezVousSave = new RendezVous(data);
@@ -399,13 +405,17 @@ exports.getListRendezVousByMecanicien = async (req, res) => {
     try {
         const mecanicienId = req.user.idPersonne;
 
+        var query = {};
+        if (req.user.role.libelle == "client") query = { client: req.user.idPersonne, etat: { $in: ["en attente", "validé", "terminé"] }};
+        else if (req.user.role.libelle == "mécanicien") query = { "services.mecanicien": req.user.idPersonne };
+
         if (!mongoose.Types.ObjectId.isValid(mecanicienId)) {
             return res
                 .status(400)
                 .json({ message: "ID de mécanicien invalide." });
         }
 
-        await getRendezVous({ "services.mecanicien": mecanicienId }, res);
+        await getRendezVous(query, res);
     } catch (error) {
         console.error(error);
         res.status(500).json({
