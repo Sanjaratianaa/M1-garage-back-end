@@ -28,6 +28,7 @@ exports.createConge = async (req, res) => {
 
         const conge = await Conge.findById(congeSave._id)
             .populate("mecanicien")
+            .populate("validateur")
             .sort({ dateHeureDemande: -1 });
 
         console.log(conge);
@@ -68,7 +69,8 @@ exports.getAllConge = async (req, res) => {
 exports.getCongeById = async (req, res) => {
     try {
         const conge = await Conge.findById(req.params.id)
-            .populate('mecanicien');
+            .populate('mecanicien')
+            .populate("validateur");
         if (!conge) {
             return res.status(404).json({ message: "Conge not found" });
         }
@@ -86,7 +88,8 @@ exports.updateConge = async (req, res) => {
             req.body,
             { new: true }
         )
-            .populate('mecanicien');
+            .populate('mecanicien')
+            .populate("validateur");
 
         if (!conge) {
             return res.status(404).json({ message: 'Conge not found' });
@@ -104,6 +107,7 @@ async function getConge(query, res) {
     try {
         const conge = await Conge.find(query)
             .populate('mecanicien')
+            .populate("validateur")
             .sort({ dateHeureDemande: -1 });
         res.status(200).json(conge);
     } catch (error) {
@@ -141,7 +145,7 @@ exports.getListCongeByMecanicien = async (req, res) => {
     try {
         const mecanicienId = req.user.idPersonne;
         var query = {};
-        if (req.user.role.libelle == "mécanicien") 
+        if (req.user.role.libelle == "mécanicien")
             query = { mecanicien: mecanicienId };
 
         if (!mongoose.Types.ObjectId.isValid(mecanicienId)) {
@@ -161,98 +165,82 @@ exports.getListCongeByMecanicien = async (req, res) => {
 exports.modifierConge = async (req, res) => {
     try {
         const congeId = req.params.id;
-        const actions = req.body.actions;
+        const action = req.body.action;
+        const commentaire = req.body.commentaire;
 
         if (!mongoose.Types.ObjectId.isValid(congeId)) {
             throw new Error("ID de congés invalide.");
         }
 
-        if (!Array.isArray(actions)) {
-            throw new Error("Les actions doivent être un tableau.");
-        }
-
         let updates = {};
         let hasUpdates = false;
 
-        for (const actionObj of actions) {
-            const action = actionObj.action;
-            const { nouveauMecanicienId, commentaire, services } = actionObj;
+        const actionsValides = ['validé', 'rejeté', 'annulé'];
 
-            const actionsValides = ['validé', 'rejeté', 'assignerMecanicien', 'annulé'];
-
-            if (!actionsValides.includes(action)) {
-                return res
-                    .status(400)
-                    .json({ message: `Action invalide : ${action}.` });
-            }
-
-            switch (action) {
-                case 'annulé':
-                    if (!commentaire) {
-                        throw new Error("La raison de l'annulation est obligatoire.");
-                    }
-                    updates.etat = 'annulé';
-                    updates.remarque = commentaire;
-                    hasUpdates = true;
-                    break;
-
-                case 'validé':
-                    const conge = await Conge.findById(congeId);
-                    const today = new Date();
-                    const dateToCheck = conge.dateConge; // Conversion en Date
-
-                    console.log(dateToCheck + " < ? " + today);
-
-                    const formattedDate = new Intl.DateTimeFormat('fr-FR', { 
-                        weekday: 'long', 
-                        day: '2-digit', 
-                        month: 'long', 
-                        year: 'numeric', 
-                        hour: '2-digit', 
-                        minute: '2-digit', 
-                    }).format(new Date(dateToCheck));
-
-                    if (dateToCheck < today)
-                        throw new Error(`La demande de  congés n'est plus valide, car la date et l'heure (${formattedDate}) demandées sont déjà passées.`);
-
-                    if (!services) {
-                        throw new Error(
-                            "L'assignation d'au moins un mécanicien est obligatoire pour poursuivre.",
-                        );
-                    }
-
-                    for (const service of services) {
-                        service.mecanicien = service.mecanicien.personne._id;
-                    }
-
-                    updates.etat = "validé";
-                    updates.validateur = req.user.idPersonne;
-                    updates.remarque = commentaire;
-                    updates.services = services;
-                    hasUpdates = true;
-                    break;
-
-                case "rejeté":
-                    if (!commentaire) {
-                        throw new Error("La raison du rejet est obligatoire.");
-                    }
-                    updates.etat = "rejeté";
-                    updates.validateur = req.user.idPersonne;
-                    updates.remarque = commentaire;
-                    hasUpdates = true;
-                    break;
-
-                case "assignerMecanicien":
-                    if (!mongoose.Types.ObjectId.isValid(nouveauMecanicienId)) {
-                        return res
-                            .status(400)
-                            .json({ message: "ID de mécanicien invalide." });
-                    }
-                    updates["services.$[].mecanicien"] = nouveauMecanicienId;
-                    hasUpdates = true;
-                    break;
-            }
+        if (!actionsValides.includes(action)) {
+            throw new Error(`Action invalide : ${action}.`);
         }
+
+        switch (action) {
+            case 'annulé':
+                if (!commentaire) {
+                    throw new Error("La raison de l'annulation est obligatoire.");
+                }
+                updates.etat = 'annulé';
+                updates.remarque = commentaire;
+                hasUpdates = true;
+                break;
+
+            case 'validé':
+                const conge = await Conge.findById(congeId);
+                const today = new Date();
+                const dateHeureDebut = conge.dateHeureDebut; // Conversion en Date
+                const dateHeureFin = conge.dateHeureFin; // Conversion en Date
+
+                console.log(dateHeureDebut + " < ? " + today);
+                console.log(dateHeureFin + " < ? " + today);
+
+                const formattedDateDebut = new Intl.DateTimeFormat('fr-FR', {
+                    weekday: 'long',
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                }).format(new Date(dateHeureDebut));
+
+                const formattedDateFin = new Intl.DateTimeFormat('fr-FR', {
+                    weekday: 'long',
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                }).format(new Date(dateHeureDebut));
+
+                if (dateHeureDebut < today)
+                    throw new Error(`La demande de  congés n'est plus valide, car la date et l'heure debut (${formattedDateDebut}) demandées sont déjà passées.`);
+
+                if (dateHeureFin < today)
+                    throw new Error(`La demande de  congés n'est plus valide, car la date et l'heure fin (${formattedDateFin}) demandées sont déjà passées.`);
+
+                updates.etat = "validé";
+                updates.validateur = req.user.idPersonne;
+                updates.remarque = commentaire;
+                hasUpdates = true;
+                break;
+
+            case "rejeté":
+                if (!commentaire) {
+                    throw new Error("La raison du rejet est obligatoire.");
+                }
+                updates.etat = "rejeté";
+                updates.validateur = req.user.idPersonne;
+                updates.remarque = commentaire;
+                hasUpdates = true;
+                break;
+        }
+
 
         // Mettre à jour le congés (seulement s'il y a des mises à jour)
         let congeMisAJour;
